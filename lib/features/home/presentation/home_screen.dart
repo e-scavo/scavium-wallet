@@ -94,7 +94,7 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                   loading: () => const Text('Loading network info...'),
-                  error: (e, _) => const Text('Error loading network info'),
+                  error: (e, _) => Text('Error loading network info: $e'),
                 ),
               ],
             ),
