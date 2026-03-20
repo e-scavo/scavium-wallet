@@ -30,45 +30,56 @@ class HistoryScreen extends ConsumerWidget {
       ),
       child: state.when(
         data: (items) {
-          if (items.isEmpty) {
-            return const Center(child: Text('No transactions yet'));
-          }
-
-          return ListView.separated(
+          return ListView(
             padding: const EdgeInsets.all(20),
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return ScaviumCard(
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    item.status == TxStatus.confirmed
-                        ? Icons.check_circle_outline
-                        : item.status == TxStatus.failed
-                        ? Icons.error_outline
-                        : Icons.schedule,
-                  ),
-                  title: Text('${item.amountDisplay} ${item.symbol}'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('To: ${item.toAddress}'),
-                      Text('Hash: ${item.txHash}'),
-                      Text(item.createdAt.toLocal().toString()),
-                    ],
-                  ),
-                  trailing: Text(item.status.name),
-                  onTap: () async {
-                    final uri = Uri.parse(
-                      '${AppConfig.current.txExplorerPath}/${item.txHash}',
-                    );
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  },
-                ),
-              );
-            },
+            children: [
+              const Text(
+                'This history currently shows locally tracked outgoing transactions and their receipt status. Incoming transactions require explorer/indexer integration.',
+              ),
+              const SizedBox(height: 16),
+              if (items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 24),
+                  child: Center(child: Text('No transactions yet')),
+                )
+              else
+                ...items.map((item) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: ScaviumCard(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          item.status == TxStatus.confirmed
+                              ? Icons.check_circle_outline
+                              : item.status == TxStatus.failed
+                              ? Icons.error_outline
+                              : Icons.schedule,
+                        ),
+                        title: Text('${item.amountDisplay} ${item.symbol}'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('To: ${item.toAddress}'),
+                            Text('Hash: ${item.txHash}'),
+                            Text(item.createdAt.toLocal().toString()),
+                          ],
+                        ),
+                        trailing: Text(item.status.name),
+                        onTap: () async {
+                          final uri = Uri.parse(
+                            '${AppConfig.current.txExplorerPath}/${item.txHash}',
+                          );
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                }),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

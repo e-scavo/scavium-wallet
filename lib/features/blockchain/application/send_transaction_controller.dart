@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scavium_wallet/core/config/app_config.dart';
+import 'package:scavium_wallet/core/utils/evm_format.dart';
 import 'package:scavium_wallet/features/assets/application/assets_controller.dart';
 import 'package:scavium_wallet/features/assets/application/tx_history_controller.dart';
 import 'package:scavium_wallet/features/assets/domain/tx_history_entry.dart';
@@ -30,12 +31,12 @@ class SendTransactionController extends AsyncNotifier<TransactionSendResult?> {
       final service = ref.read(scaviumRpcServiceProvider);
 
       try {
-        final amountWei = EtherAmount.inWei(
-          EtherAmount.fromUnitAndValue(
-            EtherUnit.ether,
-            amountText.replaceAll(',', '.'),
-          ).getInWei,
-        );
+        final amountWeiValue = EvmFormat.parseUnits(amountText, 18);
+        if (amountWeiValue <= BigInt.zero) {
+          throw Exception('Monto inválido');
+        }
+
+        final amountWei = EtherAmount.inWei(amountWeiValue);
 
         final result = await service.sendNativeTransaction(
           toAddress: toAddress,
@@ -60,6 +61,8 @@ class SendTransactionController extends AsyncNotifier<TransactionSendResult?> {
             );
 
         ref.invalidate(assetsControllerProvider);
+        await ref.read(assetsControllerProvider.notifier).refreshAssets();
+        await ref.read(txHistoryControllerProvider.notifier).refreshStatuses();
 
         return result;
       } catch (e) {

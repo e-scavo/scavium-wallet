@@ -29,35 +29,44 @@ class SendTokenController extends AsyncNotifier<TransactionSendResult?> {
     state = await AsyncValue.guard(() async {
       final rpc = ref.read(scaviumRpcServiceProvider);
 
-      final amountRaw = _parseUnits(amountText, token.decimals);
-      if (amountRaw <= BigInt.zero) {
-        throw Exception('Monto inválido');
+      try {
+        final amountRaw = _parseUnits(amountText, token.decimals);
+        if (amountRaw <= BigInt.zero) {
+          throw Exception('Monto inválido');
+        }
+
+        final result = await rpc.sendErc20Transaction(
+          contractAddress: token.contractAddress,
+          toAddress: toAddress,
+          amountRaw: amountRaw,
+        );
+
+        await ref
+            .read(txHistoryControllerProvider.notifier)
+            .addEntry(
+              TxHistoryEntry(
+                id: '${DateTime.now().microsecondsSinceEpoch}',
+                kind: TxKind.erc20Send,
+                status:
+                    result.confirmed ? TxStatus.confirmed : TxStatus.pending,
+                symbol: token.symbol,
+                tokenAddress: token.contractAddress,
+                toAddress: toAddress,
+                amountDisplay: amountText,
+                txHash: result.txHash,
+                createdAt: DateTime.now(),
+              ),
+            );
+
+        ref.invalidate(assetsControllerProvider);
+        await ref.read(assetsControllerProvider.notifier).refreshAssets();
+        await ref.read(txHistoryControllerProvider.notifier).refreshStatuses();
+
+        return result;
+      } catch (e) {
+        final normalized = await rpc.normalizeRpcError(e);
+        throw Exception(normalized);
       }
-
-      final result = await rpc.sendErc20Transaction(
-        contractAddress: token.contractAddress,
-        toAddress: toAddress,
-        amountRaw: amountRaw,
-      );
-
-      await ref
-          .read(txHistoryControllerProvider.notifier)
-          .addEntry(
-            TxHistoryEntry(
-              id: '${DateTime.now().microsecondsSinceEpoch}',
-              kind: TxKind.erc20Send,
-              status: result.confirmed ? TxStatus.confirmed : TxStatus.pending,
-              symbol: token.symbol,
-              tokenAddress: token.contractAddress,
-              toAddress: toAddress,
-              amountDisplay: amountText,
-              txHash: result.txHash,
-              createdAt: DateTime.now(),
-            ),
-          );
-
-      ref.invalidate(assetsControllerProvider);
-      return result;
     });
   }
 

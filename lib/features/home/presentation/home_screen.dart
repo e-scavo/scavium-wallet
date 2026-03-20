@@ -5,19 +5,44 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:scavium_wallet/app/router/route_names.dart';
 import 'package:scavium_wallet/core/config/app_config.dart';
-import 'package:scavium_wallet/features/assets/application/tx_history_controller.dart';
 import 'package:scavium_wallet/features/assets/application/assets_controller.dart';
+import 'package:scavium_wallet/features/assets/application/tx_history_controller.dart';
 import 'package:scavium_wallet/features/blockchain/application/network_info_controller.dart';
 import 'package:scavium_wallet/features/blockchain/data/scavium_rpc_service.dart';
+import 'package:scavium_wallet/features/home/application/home_auto_refresh_controller.dart';
 import 'package:scavium_wallet/features/wallet/application/wallet_controller.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_card.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_scaffold.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final refresh = ref.read(homeAutoRefreshControllerProvider.notifier);
+
+      await refresh.refreshNow(); // primer refresh
+      refresh.start(); // arranca timer
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(homeAutoRefreshControllerProvider);
+
     final walletState = ref.watch(walletControllerProvider);
     final assetsState = ref.watch(assetsControllerProvider);
     final networkState = ref.watch(networkInfoControllerProvider);
@@ -26,17 +51,19 @@ class HomeScreen extends ConsumerWidget {
     final rpcService = ref.read(scaviumRpcServiceProvider);
 
     final address = profile?.account.address ?? '-';
-    final nativeAsset = assetsState.valueOrNull?.firstOrNull;
+    final assets = assetsState.valueOrNull;
+    final nativeAsset =
+        (assets != null && assets.isNotEmpty) ? assets.first : null;
 
     return ScaviumScaffold(
       appBar: AppBar(
         title: const Text('SCAVIUM Wallet'),
         actions: [
           IconButton(
-            onPressed: () {
-              ref.invalidate(assetsControllerProvider);
-              ref.invalidate(networkInfoControllerProvider);
-              ref.invalidate(txHistoryControllerProvider);
+            onPressed: () async {
+              await ref
+                  .read(homeAutoRefreshControllerProvider.notifier)
+                  .refreshNow();
             },
             icon: const Icon(Icons.refresh),
           ),
@@ -178,6 +205,7 @@ class HomeScreen extends ConsumerWidget {
                     if (items.isEmpty) {
                       return const Text('No transactions yet');
                     }
+
                     final recent = items.take(3).toList();
                     return Column(
                       children:

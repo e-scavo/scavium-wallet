@@ -24,11 +24,22 @@ import 'package:scavium_wallet/features/wallet/presentation/backup_mnemonic_scre
 import 'package:scavium_wallet/features/wallet/presentation/create_wallet_screen.dart';
 import 'package:scavium_wallet/features/wallet/presentation/import_wallet_screen.dart';
 import 'package:scavium_wallet/features/wallet/presentation/confirm_mnemonic_screen.dart';
+import 'package:scavium_wallet/app/router/router_refresh_notifier.dart';
 
+final routerRefreshNotifierProvider = Provider<RouterRefreshNotifier>((ref) {
+  final notifier = RouterRefreshNotifier();
+
+  ref.listen<bool>(appLockStateControllerProvider, (_, __) {
+    notifier.refresh();
+  });
+
+  return notifier;
+});
 final appRouterProvider = Provider<GoRouter>((ref) {
   final storage = LocalStorageService();
 
   return GoRouter(
+    refreshListenable: ref.read(routerRefreshNotifierProvider),
     initialLocation: RouteNames.splash,
     routes: [
       GoRoute(

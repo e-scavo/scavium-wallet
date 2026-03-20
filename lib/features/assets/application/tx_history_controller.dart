@@ -22,6 +22,16 @@ class TxHistoryController extends AsyncNotifier<List<TxHistoryEntry>> {
   }
 
   Future<void> refreshStatuses() async {
+    final currentEntries =
+        state.valueOrNull ??
+        await ref.read(txHistoryRepositoryProvider).getEntries();
+
+    final hasPending = currentEntries.any((e) => e.status == TxStatus.pending);
+    if (!hasPending) {
+      state = AsyncData(currentEntries);
+      return;
+    }
+
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
