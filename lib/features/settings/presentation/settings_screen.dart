@@ -5,6 +5,8 @@ import 'package:scavium_wallet/app/router/route_names.dart';
 import 'package:scavium_wallet/features/assets/data/token_registry_repository_impl.dart';
 import 'package:scavium_wallet/features/assets/data/tx_history_repository_impl.dart';
 import 'package:scavium_wallet/features/wallet/application/wallet_controller.dart';
+import 'package:scavium_wallet/shared/widgets/feedback/app_snackbar.dart';
+import 'package:scavium_wallet/shared/widgets/feedback/confirm_dialog.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_card.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_scaffold.dart';
 
@@ -27,13 +29,34 @@ class SettingsScreen extends ConsumerWidget {
               ),
               trailing: const Icon(Icons.delete_outline),
               onTap: () async {
-                await ref.read(walletControllerProvider.notifier).resetWallet();
-                await ref.read(tokenRegistryRepositoryProvider).saveTokens([]);
-                await ref.read(txHistoryRepositoryProvider).clear();
+                await showDialog<void>(
+                  context: context,
+                  builder:
+                      (context) => ConfirmDialog(
+                        title: 'Reset wallet',
+                        message:
+                            'This will remove wallet data from this device. Make sure you backed up your recovery phrase.',
+                        confirmText: 'Reset',
+                        destructive: true,
+                        onConfirm: () async {
+                          await ref
+                              .read(walletControllerProvider.notifier)
+                              .resetWallet();
+                          await ref
+                              .read(tokenRegistryRepositoryProvider)
+                              .saveTokens([]);
+                          await ref.read(txHistoryRepositoryProvider).clear();
 
-                if (context.mounted) {
-                  context.go(RouteNames.walletEntry);
-                }
+                          if (context.mounted) {
+                            AppSnackbar.showInfo(
+                              context,
+                              'Wallet reset completed',
+                            );
+                            context.go(RouteNames.walletEntry);
+                          }
+                        },
+                      ),
+                );
               },
             ),
           ),

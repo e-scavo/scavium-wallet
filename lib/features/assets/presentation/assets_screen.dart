@@ -5,6 +5,7 @@ import 'package:scavium_wallet/app/router/route_names.dart';
 import 'package:scavium_wallet/features/assets/application/assets_controller.dart';
 import 'package:scavium_wallet/features/assets/domain/asset_item.dart';
 import 'package:scavium_wallet/features/assets/domain/asset_kind.dart';
+import 'package:scavium_wallet/shared/widgets/feedback/state_message.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_card.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_scaffold.dart';
 
@@ -32,8 +33,20 @@ class AssetsScreen extends ConsumerWidget {
         ],
       ),
       child: assetsState.when(
-        data:
-            (items) => ListView.separated(
+        data: (items) {
+          if (items.isEmpty) {
+            return const StateMessage(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'No assets available',
+              subtitle: 'Your assets will appear here once loaded.',
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh:
+                () =>
+                    ref.read(assetsControllerProvider.notifier).refreshAssets(),
+            child: ListView.separated(
               padding: const EdgeInsets.all(20),
               itemCount: items.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -42,8 +55,15 @@ class AssetsScreen extends ConsumerWidget {
                 return _AssetTile(item: item);
               },
             ),
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error loading assets: $e')),
+        error:
+            (e, _) => StateMessage(
+              icon: Icons.error_outline,
+              title: 'Error loading assets',
+              subtitle: '$e',
+            ),
       ),
     );
   }

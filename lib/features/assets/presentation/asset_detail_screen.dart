@@ -6,6 +6,8 @@ import 'package:scavium_wallet/features/assets/application/token_registry_contro
 import 'package:scavium_wallet/features/assets/domain/asset_item.dart';
 import 'package:scavium_wallet/features/assets/domain/asset_kind.dart';
 import 'package:scavium_wallet/features/assets/domain/token_info.dart';
+import 'package:scavium_wallet/shared/widgets/feedback/app_snackbar.dart';
+import 'package:scavium_wallet/shared/widgets/feedback/confirm_dialog.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_card.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_primary_button.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_scaffold.dart';
@@ -24,12 +26,27 @@ class AssetDetailScreen extends ConsumerWidget {
           if (asset.kind == AssetKind.erc20)
             IconButton(
               onPressed: () async {
-                await ref
-                    .read(tokenRegistryControllerProvider.notifier)
-                    .removeToken(asset.contractAddress!);
-                if (context.mounted) {
-                  context.pop();
-                }
+                await showDialog<void>(
+                  context: context,
+                  builder:
+                      (context) => ConfirmDialog(
+                        title: 'Remove token',
+                        message:
+                            'This will remove the token from your local list. It will not affect your on-chain funds.',
+                        confirmText: 'Remove',
+                        destructive: true,
+                        onConfirm: () async {
+                          await ref
+                              .read(tokenRegistryControllerProvider.notifier)
+                              .removeToken(asset.contractAddress!);
+
+                          if (context.mounted) {
+                            AppSnackbar.showInfo(context, 'Token removed');
+                            context.pop();
+                          }
+                        },
+                      ),
+                );
               },
               icon: const Icon(Icons.delete_outline),
             ),

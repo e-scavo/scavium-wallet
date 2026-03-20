@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scavium_wallet/features/assets/application/token_registry_controller.dart';
+import 'package:scavium_wallet/shared/widgets/feedback/app_snackbar.dart';
+import 'package:scavium_wallet/shared/widgets/feedback/loading_overlay.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_primary_button.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_scaffold.dart';
 import 'package:scavium_wallet/shared/widgets/section_title.dart';
@@ -47,6 +49,7 @@ class _AddTokenScreenState extends ConsumerState<AddTokenScreen> {
     }
 
     if (!mounted) return;
+    AppSnackbar.showSuccess(context, 'Token added successfully');
     context.pop();
   }
 
@@ -56,29 +59,32 @@ class _AddTokenScreenState extends ConsumerState<AddTokenScreen> {
 
     return ScaviumScaffold(
       appBar: AppBar(title: const Text('Add token')),
-      child: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          const SectionTitle(
-            title: 'Add ERC-20 token',
-            subtitle:
-                'Paste the token contract address to load metadata and balances.',
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              labelText: 'Contract address',
-              errorText: _error,
+      child: LoadingOverlay(
+        isVisible: state.isLoading,
+        message: 'Loading token metadata...',
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            const SectionTitle(
+              title: 'Add ERC-20 token',
+              subtitle:
+                  'Paste the token contract address to load metadata and balances.',
             ),
-          ),
-          const SizedBox(height: 20),
-          ScaviumPrimaryButton(
-            text: state.isLoading ? 'Adding...' : 'Add token',
-            isLoading: state.isLoading,
-            onPressed: state.isLoading ? null : _submit,
-          ),
-        ],
+            const SizedBox(height: 20),
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'Contract address',
+                errorText: _error,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ScaviumPrimaryButton(
+              text: 'Add token',
+              onPressed: state.isLoading ? null : _submit,
+            ),
+          ],
+        ),
       ),
     );
   }
