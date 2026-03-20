@@ -6,7 +6,9 @@ import 'package:scavium_wallet/core/security/screenshot_guard.dart';
 import 'package:scavium_wallet/core/utils/evm_address.dart';
 import 'package:scavium_wallet/core/utils/evm_amounts.dart';
 import 'package:scavium_wallet/features/assets/application/assets_controller.dart';
+import 'package:scavium_wallet/features/blockchain/application/native_send_preview_controller.dart';
 import 'package:scavium_wallet/features/blockchain/application/send_transaction_controller.dart';
+import 'package:scavium_wallet/features/blockchain/presentation/widgets/native_send_confirm_dialog.dart';
 import 'package:scavium_wallet/features/wallet/application/wallet_controller.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_primary_button.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_scaffold.dart';
@@ -38,7 +40,7 @@ class _SendScreenState extends ConsumerState<SendScreen> {
     super.dispose();
   }
 
-  Future<void> _send() async {
+  Future<void> _prepareSend() async {
     setState(() => _error = null);
 
     final to = _toCtrl.text.trim();
@@ -70,6 +72,7 @@ class _SendScreenState extends ConsumerState<SendScreen> {
     final assets = ref.read(assetsControllerProvider).valueOrNull;
     final nativeAsset =
         (assets != null && assets.isNotEmpty) ? assets.first : null;
+
     final balance = double.tryParse(nativeAsset?.displayBalance ?? '0') ?? 0;
     final amount = double.tryParse(amountText.replaceAll(',', '.')) ?? 0;
 
@@ -79,12 +82,54 @@ class _SendScreenState extends ConsumerState<SendScreen> {
     }
 
     await ref
+        .read(nativeSendPreviewControllerProvider.notifier)
+        .buildPreview(toAddress: to, amountText: amountText);
+
+    final previewState = ref.read(nativeSendPreviewControllerProvider);
+
+    if (previewState.hasError) {
+      setState(() => _error = previewState.error.toString());
+      return;
+    }
+
+    final preview = previewState.valueOrNull;
+    if (preview == null || !mounted) return;
+
+    final previewFee =
+        double.tryParse(
+          (preview.estimatedFeeWei / BigInt.from(1000000000000000000))
+              .toString(),
+        ) ??
+        0;
+
+    if ((amount + previewFee) > balance) {
+      setState(() => _error = 'Saldo insuficiente para monto + comisión');
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return NativeSendConfirmDialog(
+          preview: preview,
+          onConfirm: _sendConfirmed,
+        );
+      },
+    );
+  }
+
+  Future<void> _sendConfirmed() async {
+    final to = _toCtrl.text.trim();
+    final amountText = _amountCtrl.text.trim();
+
+    await ref
         .read(sendTransactionControllerProvider.notifier)
         .sendNative(toAddress: to, amountText: amountText);
 
     final state = ref.read(sendTransactionControllerProvider);
 
     if (state.hasError) {
+      if (!mounted) return;
       setState(() => _error = state.error.toString());
       return;
     }
@@ -127,7 +172,10 @@ class _SendScreenState extends ConsumerState<SendScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final previewState = ref.watch(nativeSendPreviewControllerProvider);
     final sendState = ref.watch(sendTransactionControllerProvider);
+
+    final isBusy = previewState.isLoading || sendState.isLoading;
 
     return ScaviumScaffold(
       appBar: AppBar(title: const Text('Send')),
@@ -156,9 +204,9 @@ class _SendScreenState extends ConsumerState<SendScreen> {
           ),
           const SizedBox(height: 24),
           ScaviumPrimaryButton(
-            text: sendState.isLoading ? 'Sending...' : 'Send',
-            isLoading: sendState.isLoading,
-            onPressed: sendState.isLoading ? null : _send,
+            text: isBusy ? 'Processing...' : 'Continue',
+            isLoading: isBusy,
+            onPressed: isBusy ? null : _prepareSend,
           ),
         ],
       ),

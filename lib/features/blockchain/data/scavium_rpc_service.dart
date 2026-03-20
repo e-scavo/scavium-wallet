@@ -98,7 +98,7 @@ class ScaviumRpcService {
     final web3 = _web3();
     try {
       final from = await getCurrentAddress();
-      return web3.estimateGas(sender: from, to: to, value: value);
+      return await web3.estimateGas(sender: from, to: to, value: value);
     } finally {
       web3.dispose();
     }
@@ -306,5 +306,41 @@ class ScaviumRpcService {
 
   String explorerTxUrl(String txHash) {
     return '${AppConfig.current.txExplorerPath}/$txHash';
+  }
+
+  Future<BigInt> getCurrentGasPriceWei() async {
+    final web3 = _web3();
+    try {
+      final gasPrice = await web3.getGasPrice();
+      return gasPrice.getInWei;
+    } finally {
+      web3.dispose();
+    }
+  }
+
+  Future<String> normalizeRpcError(Object error) async {
+    final raw = error.toString();
+
+    if (raw.contains('insufficient funds')) {
+      return 'Fondos insuficientes para cubrir el monto y la comisión.';
+    }
+
+    if (raw.contains('nonce')) {
+      return 'Problema de nonce al enviar la transacción.';
+    }
+
+    if (raw.contains('timeout')) {
+      return 'Tiempo de espera agotado al comunicarse con el nodo RPC.';
+    }
+
+    if (raw.contains('SocketException')) {
+      return 'No se pudo conectar al nodo RPC.';
+    }
+
+    if (raw.contains('Invalid argument')) {
+      return 'Argumentos inválidos al construir la transacción.';
+    }
+
+    return raw;
   }
 }

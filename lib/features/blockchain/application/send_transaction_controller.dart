@@ -29,40 +29,43 @@ class SendTransactionController extends AsyncNotifier<TransactionSendResult?> {
     state = await AsyncValue.guard(() async {
       final service = ref.read(scaviumRpcServiceProvider);
 
-      final amount = double.tryParse(amountText.replaceAll(',', '.'));
-      if (amount == null || amount <= 0) {
-        throw Exception('Monto inválido');
+      try {
+        final amountWei = EtherAmount.inWei(
+          EtherAmount.fromUnitAndValue(
+            EtherUnit.ether,
+            amountText.replaceAll(',', '.'),
+          ).getInWei,
+        );
+
+        final result = await service.sendNativeTransaction(
+          toAddress: toAddress,
+          amount: amountWei,
+        );
+
+        await ref
+            .read(txHistoryControllerProvider.notifier)
+            .addEntry(
+              TxHistoryEntry(
+                id: '${DateTime.now().microsecondsSinceEpoch}',
+                kind: TxKind.nativeSend,
+                status:
+                    result.confirmed ? TxStatus.confirmed : TxStatus.pending,
+                symbol: AppConfig.current.nativeSymbol,
+                tokenAddress: null,
+                toAddress: toAddress,
+                amountDisplay: amountText,
+                txHash: result.txHash,
+                createdAt: DateTime.now(),
+              ),
+            );
+
+        ref.invalidate(assetsControllerProvider);
+
+        return result;
+      } catch (e) {
+        final normalized = await service.normalizeRpcError(e);
+        throw Exception(normalized);
       }
-
-      final value = EtherAmount.fromUnitAndValue(
-        EtherUnit.ether,
-        amount.toString(),
-      );
-
-      final result = await service.sendNativeTransaction(
-        toAddress: toAddress,
-        amount: value,
-      );
-
-      await ref
-          .read(txHistoryControllerProvider.notifier)
-          .addEntry(
-            TxHistoryEntry(
-              id: '${DateTime.now().microsecondsSinceEpoch}',
-              kind: TxKind.nativeSend,
-              status: result.confirmed ? TxStatus.confirmed : TxStatus.pending,
-              symbol: AppConfig.current.nativeSymbol,
-              tokenAddress: null,
-              toAddress: toAddress,
-              amountDisplay: amountText,
-              txHash: result.txHash,
-              createdAt: DateTime.now(),
-            ),
-          );
-
-      ref.invalidate(assetsControllerProvider);
-
-      return result;
     });
   }
 }
