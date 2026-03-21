@@ -8,6 +8,7 @@ import 'package:scavium_wallet/core/config/app_config.dart';
 import 'package:scavium_wallet/features/assets/application/assets_controller.dart';
 import 'package:scavium_wallet/features/assets/application/tx_history_controller.dart';
 import 'package:scavium_wallet/features/blockchain/application/network_info_controller.dart';
+import 'package:scavium_wallet/features/blockchain/application/rpc_status_controller.dart';
 import 'package:scavium_wallet/features/blockchain/data/scavium_rpc_service.dart';
 import 'package:scavium_wallet/features/home/application/home_auto_refresh_controller.dart';
 import 'package:scavium_wallet/features/wallet/application/wallet_controller.dart';
@@ -28,15 +29,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final refresh = ref.read(homeAutoRefreshControllerProvider.notifier);
-
-      await refresh.refreshNow(); // primer refresh
-      refresh.start(); // arranca timer
+      await refresh.refreshNow();
+      refresh.start();
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  String _formatLastSwitchAgo(DateTime? dateTime) {
+    if (dateTime == null) return 'unknown time';
+
+    final diff = DateTime.now().difference(dateTime);
+
+    if (diff.inSeconds < 60) {
+      return '${diff.inSeconds}s ago';
+    }
+
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    }
+
+    return '${diff.inHours}h ago';
   }
 
   @override
@@ -47,6 +58,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final assetsState = ref.watch(assetsControllerProvider);
     final networkState = ref.watch(networkInfoControllerProvider);
     final historyState = ref.watch(txHistoryControllerProvider);
+    final rpcStatusState = ref.watch(rpcStatusControllerProvider);
+
     final profile = walletState.valueOrNull;
     final rpcService = ref.read(scaviumRpcServiceProvider);
 
@@ -122,6 +135,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                   loading: () => const Text('Loading network info...'),
                   error: (e, _) => Text('Error loading network info: $e'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          ScaviumCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'RPC status',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 12),
+                rpcStatusState.when(
+                  data: (status) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Active node: ${status.activeRpcName}'),
+                        const SizedBox(height: 6),
+                        SelectableText(status.activeRpcUrl),
+                        const SizedBox(height: 10),
+                        if (status.hasRecentFailover) ...[
+                          const Text('Recent failover detected'),
+                          const SizedBox(height: 6),
+                          if (status.lastFailedRpcUrl != null)
+                            SelectableText(
+                              'Previous failed node: ${status.lastFailedRpcUrl}',
+                            ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Detected ${_formatLastSwitchAgo(status.lastSwitchAt)}',
+                          ),
+                        ] else ...[
+                          const Text('No recent failover detected'),
+                        ],
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton(
+                            onPressed:
+                                () => context.push(RouteNames.rpcDiagnostics),
+                            child: const Text('Open RPC diagnostics'),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const Text('Loading RPC status...'),
+                  error: (e, _) => Text('Error loading RPC status: $e'),
                 ),
               ],
             ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scavium_wallet/features/assets/application/assets_controller.dart';
 import 'package:scavium_wallet/features/assets/application/tx_history_controller.dart';
 import 'package:scavium_wallet/features/blockchain/application/network_info_controller.dart';
+import 'package:scavium_wallet/features/blockchain/application/rpc_status_controller.dart';
 import 'package:scavium_wallet/features/lock/application/app_lock_state_controller.dart';
 
 final homeAutoRefreshControllerProvider =
@@ -23,8 +24,7 @@ class HomeAutoRefreshController extends Notifier<bool> {
   }
 
   void start({Duration interval = const Duration(seconds: 15)}) {
-    _timer?.cancel(); // 🔥 clave
-
+    _timer?.cancel();
     state = true;
 
     _timer = Timer.periodic(interval, (_) async {
@@ -42,9 +42,9 @@ class HomeAutoRefreshController extends Notifier<bool> {
   }
 
   Future<void> refreshNow() async {
-    print('HomeAutoRefreshController: refreshing data...');
     ref.invalidate(networkInfoControllerProvider);
     ref.invalidate(assetsControllerProvider);
     ref.invalidate(txHistoryControllerProvider);
+    ref.invalidate(rpcStatusControllerProvider);
   }
 }

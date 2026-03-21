@@ -38,6 +38,10 @@ class ScaviumRpcService {
   bool _hydrated = false;
   final Map<String, int> _cooldownUntilEpochMsByUrl = {};
 
+  DateTime? _lastSwitchAt;
+  String? _lastSwitchReason;
+  String? _lastFailedRpcUrl;
+
   static const Duration _rpcCooldown = Duration(seconds: 60);
 
   ScaviumRpcService({
@@ -155,6 +159,12 @@ class ScaviumRpcService {
     _cooldownUntilEpochMsByUrl.remove(rpcUrls[index]);
   }
 
+  void _recordRpcSwitch({required String reason, String? failedRpcUrl}) {
+    _lastSwitchAt = DateTime.now();
+    _lastSwitchReason = reason;
+    _lastFailedRpcUrl = failedRpcUrl;
+  }
+
   String _activeRpcUrlSync() {
     final rpcUrls = _validatedRpcUrls();
 
@@ -191,12 +201,22 @@ class ScaviumRpcService {
     return order;
   }
 
-  Future<void> _promoteRpcIndex(int index) async {
+  Future<void> _promoteRpcIndex(
+    int index, {
+    String? reason,
+    String? failedRpcUrl,
+  }) async {
     final rpcUrls = _validatedRpcUrls();
     if (index < 0 || index >= rpcUrls.length) return;
 
+    final previousIndex = _activeRpcIndex;
     _activeRpcIndex = index;
     _clearRpcCooldownByIndex(index);
+
+    if (reason != null && previousIndex != index) {
+      _recordRpcSwitch(reason: reason, failedRpcUrl: failedRpcUrl);
+    }
+
     await _persistState();
   }
 
@@ -206,11 +226,18 @@ class ScaviumRpcService {
 
     _markRpcFailedByIndex(failedIndex);
 
+    final previousIndex = _activeRpcIndex;
+    final failedRpcUrl = rpcUrls[failedIndex];
+
     final order = _rpcAttemptOrderSync(skipCoolingDown: true);
     if (order.isNotEmpty) {
       _activeRpcIndex = order.first;
     } else {
       _activeRpcIndex = (_activeRpcIndex + 1) % rpcUrls.length;
+    }
+
+    if (previousIndex != _activeRpcIndex) {
+      _recordRpcSwitch(reason: 'failover', failedRpcUrl: failedRpcUrl);
     }
 
     await _persistState();
@@ -243,8 +270,6 @@ class ScaviumRpcService {
     if (raw.contains('502 bad gateway')) return true;
     if (raw.contains('503 service unavailable')) return true;
     if (raw.contains('504 gateway timeout')) return true;
-
-    // Muy importante para cuando nginx/proxy devuelve HTML en vez de JSON-RPC.
     if (raw.contains('formatexception')) return true;
     if (raw.contains('unexpected character')) return true;
     if (raw.contains('<html>')) return true;
@@ -262,6 +287,9 @@ class ScaviumRpcService {
   ) async {
     await _ensureHydrated();
 
+    final initialIndex = _activeRpcIndex;
+    final initialRpcUrl = _validatedRpcUrls()[initialIndex];
+
     final order = _rpcAttemptOrderSync(skipCoolingDown: true);
     Object? lastError;
 
@@ -271,7 +299,17 @@ class ScaviumRpcService {
 
       try {
         final result = await action(web3);
-        await _promoteRpcIndex(index);
+
+        if (index != initialIndex) {
+          await _promoteRpcIndex(
+            index,
+            reason: 'failover',
+            failedRpcUrl: initialRpcUrl,
+          );
+        } else {
+          await _promoteRpcIndex(index);
+        }
+
         return result;
       } catch (error) {
         lastError = error;
@@ -331,6 +369,9 @@ class ScaviumRpcService {
       activeRpcUrl: _activeRpcUrlSync(),
       rpcUrls: List<String>.unmodifiable(rpcUrls),
       cooldownUntilByRpcUrl: Map<String, DateTime?>.unmodifiable(cooldowns),
+      lastSwitchAt: _lastSwitchAt,
+      lastSwitchReason: _lastSwitchReason,
+      lastFailedRpcUrl: _lastFailedRpcUrl,
     );
   }
 
@@ -343,12 +384,18 @@ class ScaviumRpcService {
       throw ArgumentError('Índice RPC inválido: $index');
     }
 
+    final previousIndex = _activeRpcIndex;
     final web3 = _web3ForUrl(rpcUrls[index]);
 
     try {
       await web3.getChainId();
       _activeRpcIndex = index;
       _clearRpcCooldownByIndex(index);
+
+      if (previousIndex != index) {
+        _recordRpcSwitch(reason: 'manual');
+      }
+
       await _persistState();
     } finally {
       web3.dispose();
