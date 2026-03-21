@@ -705,3 +705,245 @@ Execution was intentionally deferred to avoid incomplete or unverified setup.
 ### Next Step
 
 Execute Phase 6.2 on a macOS environment with Xcode.
+
+---
+
+## Phase 6.6 — Release Preparation
+
+### Objective
+
+Prepare SCAVIUM Wallet for controlled release by defining versioning rules, artifact conventions, validation criteria, release checkpoints, and operational readiness requirements.
+
+This phase does not introduce feature changes. It formalizes the release process around the already completed packaging and branding work.
+
+---
+
+### Scope
+
+This subphase includes:
+
+- versioning strategy
+- build artifact naming conventions
+- release candidate criteria
+- pre-release validation checklist
+- release checklist
+- platform readiness summary
+- deferred platform tracking
+
+It excludes:
+
+- new wallet functionality
+- architecture changes
+- platform redesign
+- store listing content finalization
+
+---
+
+### Release Baseline
+
+At the beginning of Phase 6.6, the project status is:
+
+- Phase 6.5 completed
+- Phase 6.1 completed
+- Phase 6.3 completed
+- Phase 6.4 completed
+- Phase 6.2 deferred pending macOS/Xcode environment
+
+This means Android, Web, and Windows packaging are operational, while iOS remains intentionally pending.
+
+---
+
+### Target Environment
+
+The current release preparation is targeting:
+
+- `Testnet`
+
+This release is intended for controlled distribution and validation before any production deployment.
+
+---
+
+### Versioning Strategy
+
+Current release candidate version:
+
+- `0.2.1+3`
+
+Versioning follows:
+
+- `MAJOR.MINOR.PATCH+BUILD`
+
+Version intent:
+
+- `MAJOR`: major product milestones
+- `MINOR`: feature phase increments
+- `PATCH`: fixes and stabilization
+- `BUILD`: build iteration number
+
+---
+
+### Release Candidate Status
+
+Current build status:
+
+- **Release Candidate (RC1)**
+
+Validation status:
+
+- user-level testing executed
+- core flows exercised by real users
+- minor regressions identified (Android)
+
+The current release is **not considered final** and requires stabilization.
+
+---
+
+### Known Issues
+
+At the time of Phase 6.6:
+
+- some Android behaviors previously working have regressed
+- issues are non-blocking but require correction before production release
+
+These issues must be resolved before advancing to production deployment.
+
+---
+
+### Artifact Conventions
+
+Generated artifacts:
+
+- Android App Bundle:
+  - `build/app/outputs/bundle/release/app-release.aab`
+- Android APK:
+  - `build/app/outputs/flutter-apk/app-release.apk`
+- Web build:
+  - `build/web/`
+- Windows release executable:
+  - `build/windows/x64/runner/Release/scavium_wallet.exe`
+
+Suggested archive naming:
+
+- `scavium-wallet-testnet-v0.2.1+3-android.aab`
+- `scavium-wallet-testnet-v0.2.1+3-android.apk`
+- `scavium-wallet-testnet-v0.2.1+3-web.zip`
+- `scavium-wallet-testnet-v0.2.1+3-windows.zip`
+
+---
+
+### Release Freeze Rule
+
+Once a release candidate is declared:
+
+Allowed changes:
+
+- bug fixes
+- crash fixes
+- regression fixes
+- packaging corrections
+- signing corrections
+
+Not allowed:
+
+- new features
+- architectural changes
+- UI redesign
+
+---
+
+### Pre-Release Validation Checklist
+
+- [x] Flutter version validated
+- [x] version updated to `0.2.1+3`
+- [x] branding assets finalized
+- [x] Android AAB build successful
+- [x] Android APK build successful
+- [x] Web build successful
+- [x] Windows build successful
+- [x] Android signing validated
+- [x] placeholders removed
+- [x] app naming consistent
+- [x] initial user testing performed
+- [ ] Android regressions resolved
+- [ ] final smoke test executed post-fix
+
+---
+
+### Smoke Test Minimum Set
+
+Validated partially:
+
+- [x] wallet creation
+- [x] wallet import
+- [x] unlock flow
+- [x] balance loading
+- [x] transaction flows access
+
+Pending re-validation after fixes:
+
+- [ ] Android-specific regression flows
+- [ ] full transaction cycle verification
+- [ ] session persistence validation
+
+---
+
+### Platform Readiness Summary
+
+#### Android
+
+Status:
+
+- Release Candidate
+
+Notes:
+
+- build stable
+- signing correct
+- regressions pending fix
+
+---
+
+#### Web
+
+Status:
+
+- Release-ready
+
+---
+
+#### Windows
+
+Status:
+
+- Release-ready
+
+---
+
+#### iOS
+
+Status:
+
+- Deferred
+
+Reason:
+
+- requires macOS and Xcode environment
+
+---
+
+### Result
+
+At the end of Phase 6.6:
+
+- release process is defined
+- release candidate (RC1) is established
+- artifacts are generated and traceable
+- testnet distribution is enabled
+- known issues are identified
+- production release is pending stabilization
+
+---
+
+### Next Phase
+
+Phase 6.7 — Store Deployment
