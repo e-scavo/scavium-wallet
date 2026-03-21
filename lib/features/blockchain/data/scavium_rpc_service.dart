@@ -1,16 +1,19 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:scavium_wallet/core/config/app_config.dart';
+import 'package:scavium_wallet/core/constants/storage_keys.dart';
+import 'package:scavium_wallet/core/services/local_storage_service.dart';
 import 'package:scavium_wallet/core/utils/rpc_url_validator.dart';
 import 'package:scavium_wallet/features/assets/domain/token_info.dart';
 import 'package:scavium_wallet/features/blockchain/domain/network_info.dart';
+import 'package:scavium_wallet/features/blockchain/domain/scavium_rpc_status.dart';
 import 'package:scavium_wallet/features/blockchain/domain/transaction_send_result.dart';
 import 'package:scavium_wallet/features/wallet/data/wallet_repository_impl.dart';
 import 'package:scavium_wallet/features/wallet/domain/wallet_repository.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:scavium_wallet/features/blockchain/domain/scavium_rpc_status.dart';
 
 final httpClientProvider = Provider<http.Client>((ref) {
   final client = http.Client();
@@ -22,16 +25,26 @@ final scaviumRpcServiceProvider = Provider<ScaviumRpcService>((ref) {
   return ScaviumRpcService(
     client: ref.read(httpClientProvider),
     walletRepository: ref.read(walletRepositoryProvider),
+    localStorage: LocalStorageService(),
   );
 });
 
 class ScaviumRpcService {
   final http.Client client;
   final WalletRepository walletRepository;
+  final LocalStorageService localStorage;
 
   int _activeRpcIndex = 0;
+  bool _hydrated = false;
+  final Map<String, int> _cooldownUntilEpochMsByUrl = {};
 
-  ScaviumRpcService({required this.client, required this.walletRepository});
+  static const Duration _rpcCooldown = Duration(seconds: 60);
+
+  ScaviumRpcService({
+    required this.client,
+    required this.walletRepository,
+    required this.localStorage,
+  });
 
   static const String _erc20Abi = '''
 [
@@ -49,32 +62,110 @@ class ScaviumRpcService {
     return AppConfig.current.rpcUrls;
   }
 
-  String get activeRpcUrl {
+  Future<void> _ensureHydrated() async {
+    if (_hydrated) return;
+    await _hydrateState();
+    _hydrated = true;
+  }
+
+  Future<void> _hydrateState() async {
     final rpcUrls = _validatedRpcUrls();
+
+    final savedIndex = await localStorage.getInt(StorageKeys.rpcActiveIndex);
+    if (savedIndex != null && savedIndex >= 0 && savedIndex < rpcUrls.length) {
+      _activeRpcIndex = savedIndex;
+    } else {
+      _activeRpcIndex = 0;
+    }
+
+    final rawCooldown = await localStorage.getString(
+      StorageKeys.rpcCooldownUntilByUrl,
+    );
+
+    if (rawCooldown != null && rawCooldown.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawCooldown);
+
+        if (decoded is Map<String, dynamic>) {
+          for (final entry in decoded.entries) {
+            final value = entry.value;
+            if (value is int) {
+              _cooldownUntilEpochMsByUrl[entry.key] = value;
+            }
+          }
+        }
+      } catch (_) {
+        _cooldownUntilEpochMsByUrl.clear();
+      }
+    }
+
+    _pruneExpiredCooldowns();
+
     if (_activeRpcIndex < 0 || _activeRpcIndex >= rpcUrls.length) {
       _activeRpcIndex = 0;
     }
+  }
+
+  Future<void> _persistState() async {
+    await localStorage.setInt(StorageKeys.rpcActiveIndex, _activeRpcIndex);
+
+    _pruneExpiredCooldowns();
+
+    if (_cooldownUntilEpochMsByUrl.isEmpty) {
+      await localStorage.remove(StorageKeys.rpcCooldownUntilByUrl);
+      return;
+    }
+
+    await localStorage.setString(
+      StorageKeys.rpcCooldownUntilByUrl,
+      jsonEncode(_cooldownUntilEpochMsByUrl),
+    );
+  }
+
+  void _pruneExpiredCooldowns() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _cooldownUntilEpochMsByUrl.removeWhere((_, until) => until <= now);
+  }
+
+  DateTime? _cooldownUntilForUrl(String rpcUrl) {
+    _pruneExpiredCooldowns();
+    final epoch = _cooldownUntilEpochMsByUrl[rpcUrl];
+    if (epoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(epoch);
+  }
+
+  bool _isRpcCoolingDown(String rpcUrl) {
+    final until = _cooldownUntilForUrl(rpcUrl);
+    if (until == null) return false;
+    return until.isAfter(DateTime.now());
+  }
+
+  void _markRpcFailedByIndex(int index) {
+    final rpcUrls = _validatedRpcUrls();
+    if (index < 0 || index >= rpcUrls.length) return;
+
+    final until = DateTime.now().add(_rpcCooldown).millisecondsSinceEpoch;
+    _cooldownUntilEpochMsByUrl[rpcUrls[index]] = until;
+  }
+
+  void _clearRpcCooldownByIndex(int index) {
+    final rpcUrls = _validatedRpcUrls();
+    if (index < 0 || index >= rpcUrls.length) return;
+
+    _cooldownUntilEpochMsByUrl.remove(rpcUrls[index]);
+  }
+
+  String _activeRpcUrlSync() {
+    final rpcUrls = _validatedRpcUrls();
+
+    if (_activeRpcIndex < 0 || _activeRpcIndex >= rpcUrls.length) {
+      _activeRpcIndex = 0;
+    }
+
     return rpcUrls[_activeRpcIndex];
   }
 
-  void _setActiveRpcIndex(int index) {
-    final rpcUrls = _validatedRpcUrls();
-    if (index < 0 || index >= rpcUrls.length) return;
-    _activeRpcIndex = index;
-  }
-
-  void _promoteRpcIndex(int index) {
-    if (_activeRpcIndex == index) return;
-    _setActiveRpcIndex(index);
-  }
-
-  void _advanceRpcIndex() {
-    final rpcUrls = _validatedRpcUrls();
-    if (rpcUrls.isEmpty) return;
-    _activeRpcIndex = (_activeRpcIndex + 1) % rpcUrls.length;
-  }
-
-  List<int> _rpcAttemptOrder() {
+  List<int> _rpcAttemptOrderSync({bool skipCoolingDown = true}) {
     final rpcUrls = _validatedRpcUrls();
     if (rpcUrls.isEmpty) return const [];
 
@@ -82,7 +173,47 @@ class ScaviumRpcService {
     for (var offset = 0; offset < rpcUrls.length; offset++) {
       order.add((_activeRpcIndex + offset) % rpcUrls.length);
     }
+
+    if (!skipCoolingDown) {
+      return order;
+    }
+
+    final preferred =
+        order.where((index) {
+          final rpcUrl = rpcUrls[index];
+          return !_isRpcCoolingDown(rpcUrl);
+        }).toList();
+
+    if (preferred.isNotEmpty) {
+      return preferred;
+    }
+
     return order;
+  }
+
+  Future<void> _promoteRpcIndex(int index) async {
+    final rpcUrls = _validatedRpcUrls();
+    if (index < 0 || index >= rpcUrls.length) return;
+
+    _activeRpcIndex = index;
+    _clearRpcCooldownByIndex(index);
+    await _persistState();
+  }
+
+  Future<void> _advanceRpcIndexAfterFailure(int failedIndex) async {
+    final rpcUrls = _validatedRpcUrls();
+    if (rpcUrls.isEmpty) return;
+
+    _markRpcFailedByIndex(failedIndex);
+
+    final order = _rpcAttemptOrderSync(skipCoolingDown: true);
+    if (order.isNotEmpty) {
+      _activeRpcIndex = order.first;
+    } else {
+      _activeRpcIndex = (_activeRpcIndex + 1) % rpcUrls.length;
+    }
+
+    await _persistState();
   }
 
   bool _isRetryableRpcError(Object error) {
@@ -91,6 +222,7 @@ class ScaviumRpcService {
     if (error is SocketException) return true;
     if (error is HandshakeException) return true;
     if (error is HttpException) return true;
+    if (error is FormatException) return true;
 
     if (raw.contains('socketexception')) return true;
     if (raw.contains('handshakeexception')) return true;
@@ -112,6 +244,12 @@ class ScaviumRpcService {
     if (raw.contains('503 service unavailable')) return true;
     if (raw.contains('504 gateway timeout')) return true;
 
+    // Muy importante para cuando nginx/proxy devuelve HTML en vez de JSON-RPC.
+    if (raw.contains('formatexception')) return true;
+    if (raw.contains('unexpected character')) return true;
+    if (raw.contains('<html>')) return true;
+    if (raw.contains('<!doctype html')) return true;
+
     return false;
   }
 
@@ -122,7 +260,9 @@ class ScaviumRpcService {
   Future<T> _executeReadWithFallback<T>(
     Future<T> Function(Web3Client web3) action,
   ) async {
-    final order = _rpcAttemptOrder();
+    await _ensureHydrated();
+
+    final order = _rpcAttemptOrderSync(skipCoolingDown: true);
     Object? lastError;
 
     for (final index in order) {
@@ -131,7 +271,7 @@ class ScaviumRpcService {
 
       try {
         final result = await action(web3);
-        _promoteRpcIndex(index);
+        await _promoteRpcIndex(index);
         return result;
       } catch (error) {
         lastError = error;
@@ -139,6 +279,9 @@ class ScaviumRpcService {
         if (!_isRetryableRpcError(error)) {
           rethrow;
         }
+
+        _markRpcFailedByIndex(index);
+        await _persistState();
       } finally {
         web3.dispose();
       }
@@ -154,17 +297,95 @@ class ScaviumRpcService {
   Future<T> _executeWriteOnActiveRpc<T>(
     Future<T> Function(Web3Client web3) action,
   ) async {
-    final rpcUrl = activeRpcUrl;
+    await _ensureHydrated();
+
+    final failedIndex = _activeRpcIndex;
+    final rpcUrl = _activeRpcUrlSync();
     final web3 = _web3ForUrl(rpcUrl);
 
     try {
       final result = await action(web3);
+      _clearRpcCooldownByIndex(failedIndex);
+      await _persistState();
       return result;
     } catch (error) {
       if (_isRetryableRpcError(error)) {
-        _advanceRpcIndex();
+        await _advanceRpcIndexAfterFailure(failedIndex);
       }
       rethrow;
+    } finally {
+      web3.dispose();
+    }
+  }
+
+  Future<ScaviumRpcStatus> getRpcStatus() async {
+    await _ensureHydrated();
+
+    final rpcUrls = _validatedRpcUrls();
+    final cooldowns = <String, DateTime?>{
+      for (final url in rpcUrls) url: _cooldownUntilForUrl(url),
+    };
+
+    return ScaviumRpcStatus(
+      activeIndex: _activeRpcIndex,
+      activeRpcUrl: _activeRpcUrlSync(),
+      rpcUrls: List<String>.unmodifiable(rpcUrls),
+      cooldownUntilByRpcUrl: Map<String, DateTime?>.unmodifiable(cooldowns),
+    );
+  }
+
+  Future<void> setActiveRpcByIndex(int index) async {
+    await _ensureHydrated();
+
+    final rpcUrls = _validatedRpcUrls();
+
+    if (index < 0 || index >= rpcUrls.length) {
+      throw ArgumentError('Índice RPC inválido: $index');
+    }
+
+    final web3 = _web3ForUrl(rpcUrls[index]);
+
+    try {
+      await web3.getChainId();
+      _activeRpcIndex = index;
+      _clearRpcCooldownByIndex(index);
+      await _persistState();
+    } finally {
+      web3.dispose();
+    }
+  }
+
+  Future<bool> pingActiveRpc() async {
+    await _ensureHydrated();
+
+    final web3 = _web3ForUrl(_activeRpcUrlSync());
+
+    try {
+      await web3.getChainId();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      web3.dispose();
+    }
+  }
+
+  Future<bool> pingRpcByIndex(int index) async {
+    await _ensureHydrated();
+
+    final rpcUrls = _validatedRpcUrls();
+
+    if (index < 0 || index >= rpcUrls.length) {
+      return false;
+    }
+
+    final web3 = _web3ForUrl(rpcUrls[index]);
+
+    try {
+      await web3.getChainId();
+      return true;
+    } catch (_) {
+      return false;
     } finally {
       web3.dispose();
     }
@@ -247,11 +468,10 @@ class ScaviumRpcService {
   }
 
   DeployedContract _erc20Contract(String contractAddress) {
-    final contract = DeployedContract(
+    return DeployedContract(
       ContractAbi.fromJson(_erc20Abi, 'ERC20'),
       EthereumAddress.fromHex(contractAddress),
     );
-    return contract;
   }
 
   Future<TokenInfo> loadTokenMetadata(String contractAddress) async {
@@ -392,9 +612,7 @@ class ScaviumRpcService {
         if (receipt != null) {
           return receipt.status ?? true;
         }
-      } catch (_) {
-        // dejamos que el polling continúe con el RPC activo/fallback
-      }
+      } catch (_) {}
 
       await Future<void>.delayed(delay);
     }
@@ -445,68 +663,5 @@ class ScaviumRpcService {
     }
 
     return raw;
-  }
-
-  ScaviumRpcStatus getRpcStatus() {
-    final rpcUrls = _validatedRpcUrls();
-
-    if (_activeRpcIndex < 0 || _activeRpcIndex >= rpcUrls.length) {
-      _activeRpcIndex = 0;
-    }
-
-    return ScaviumRpcStatus(
-      activeIndex: _activeRpcIndex,
-      activeRpcUrl: rpcUrls[_activeRpcIndex],
-      rpcUrls: List<String>.unmodifiable(rpcUrls),
-    );
-  }
-
-  Future<void> setActiveRpcByIndex(int index) async {
-    final rpcUrls = _validatedRpcUrls();
-
-    if (index < 0 || index >= rpcUrls.length) {
-      throw ArgumentError('Índice RPC inválido: $index');
-    }
-
-    final web3 = _web3ForUrl(rpcUrls[index]);
-
-    try {
-      await web3.getChainId();
-      _setActiveRpcIndex(index);
-    } finally {
-      web3.dispose();
-    }
-  }
-
-  Future<bool> pingActiveRpc() async {
-    final web3 = _web3ForUrl(activeRpcUrl);
-
-    try {
-      await web3.getChainId();
-      return true;
-    } catch (_) {
-      return false;
-    } finally {
-      web3.dispose();
-    }
-  }
-
-  Future<bool> pingRpcByIndex(int index) async {
-    final rpcUrls = _validatedRpcUrls();
-
-    if (index < 0 || index >= rpcUrls.length) {
-      return false;
-    }
-
-    final web3 = _web3ForUrl(rpcUrls[index]);
-
-    try {
-      await web3.getChainId();
-      return true;
-    } catch (_) {
-      return false;
-    } finally {
-      web3.dispose();
-    }
   }
 }

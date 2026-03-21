@@ -18,6 +18,8 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
   String? _message;
 
   Future<void> _refresh() async {
+    if (!mounted) return;
+
     setState(() {
       _message = null;
     });
@@ -29,6 +31,8 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
   }
 
   Future<void> _pingActive() async {
+    if (!mounted) return;
+
     setState(() {
       _message = null;
       _activePingOk = null;
@@ -46,9 +50,16 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
               ? 'El nodo activo respondió correctamente.'
               : 'El nodo activo no respondió.';
     });
+
+    await ref.read(rpcStatusControllerProvider.notifier).refreshStatus();
+
+    if (!mounted) return;
+    setState(() {});
   }
 
   Future<void> _selectRpc(int index) async {
+    if (!mounted) return;
+
     setState(() {
       _message = null;
       _checkingIndex = index;
@@ -65,6 +76,8 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
   }
 
   Future<void> _pingRpc(int index) async {
+    if (!mounted) return;
+
     setState(() {
       _message = null;
       _checkingIndex = index;
@@ -83,6 +96,19 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
               ? 'RPC ${index + 1} respondió correctamente.'
               : 'RPC ${index + 1} no respondió.';
     });
+
+    await ref.read(rpcStatusControllerProvider.notifier).refreshStatus();
+
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  String _cooldownText(Duration? duration) {
+    if (duration == null || duration == Duration.zero) {
+      return 'No cooldown';
+    }
+
+    return 'Cooldown: ${duration.inSeconds}s';
   }
 
   @override
@@ -96,7 +122,8 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
         children: [
           const SectionTitle(
             title: 'RPC diagnostics',
-            subtitle: 'Inspect and control the currently active RPC endpoint.',
+            subtitle:
+                'Inspect active RPC node, cooldown state and switch the active node manually.',
           ),
           const SizedBox(height: 20),
           Row(
@@ -152,6 +179,14 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
                           Text('Active index: ${status.activeIndex}'),
                           const SizedBox(height: 8),
                           SelectableText('Active RPC: ${status.activeRpcUrl}'),
+                          const SizedBox(height: 8),
+                          Text(
+                            status.isCoolingDown(status.activeRpcUrl)
+                                ? _cooldownText(
+                                  status.cooldownRemaining(status.activeRpcUrl),
+                                )
+                                : 'Active RPC without cooldown',
+                          ),
                         ],
                       ),
                     ),
@@ -161,6 +196,8 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
                     final rpcUrl = status.rpcUrls[index];
                     final isActive = index == status.activeIndex;
                     final isBusy = _checkingIndex == index;
+                    final cooldown = status.cooldownRemaining(rpcUrl);
+                    final isCoolingDown = status.isCoolingDown(rpcUrl);
 
                     return Card(
                       child: Padding(
@@ -175,6 +212,12 @@ class _RpcDiagnosticsScreenState extends ConsumerState<RpcDiagnosticsScreen> {
                             ),
                             const SizedBox(height: 8),
                             SelectableText(rpcUrl),
+                            const SizedBox(height: 8),
+                            Text(
+                              isCoolingDown
+                                  ? _cooldownText(cooldown)
+                                  : 'No cooldown',
+                            ),
                             const SizedBox(height: 12),
                             Row(
                               children: [

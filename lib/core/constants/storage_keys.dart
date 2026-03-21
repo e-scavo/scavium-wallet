@@ -14,4 +14,7 @@ abstract final class StorageKeys {
 
   static const tokenRegistryJson = 'token_registry_json';
   static const txHistoryJson = 'tx_history_json';
+
+  static const rpcActiveIndex = 'rpc_active_index';
+  static const rpcCooldownUntilByUrl = 'rpc_cooldown_until_by_url';
 }
