@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:scavium_wallet/core/config/app_config.dart';
@@ -26,6 +28,8 @@ class ScaviumRpcService {
   final http.Client client;
   final WalletRepository walletRepository;
 
+  int _activeRpcIndex = 0;
+
   ScaviumRpcService({required this.client, required this.walletRepository});
 
   static const String _erc20Abi = '''
@@ -39,18 +43,134 @@ class ScaviumRpcService {
 ]
 ''';
 
-  String _activeRpcUrl() {
+  List<String> _validatedRpcUrls() {
     RpcUrlValidator.validateAll(AppConfig.current.rpcUrls);
-    return AppConfig.current.rpcUrl;
+    return AppConfig.current.rpcUrls;
   }
 
-  Web3Client _web3() {
-    return Web3Client(_activeRpcUrl(), client);
+  String get activeRpcUrl {
+    final rpcUrls = _validatedRpcUrls();
+    if (_activeRpcIndex < 0 || _activeRpcIndex >= rpcUrls.length) {
+      _activeRpcIndex = 0;
+    }
+    return rpcUrls[_activeRpcIndex];
+  }
+
+  void _setActiveRpcIndex(int index) {
+    final rpcUrls = _validatedRpcUrls();
+    if (index < 0 || index >= rpcUrls.length) return;
+    _activeRpcIndex = index;
+  }
+
+  void _promoteRpcIndex(int index) {
+    if (_activeRpcIndex == index) return;
+    _setActiveRpcIndex(index);
+  }
+
+  void _advanceRpcIndex() {
+    final rpcUrls = _validatedRpcUrls();
+    if (rpcUrls.isEmpty) return;
+    _activeRpcIndex = (_activeRpcIndex + 1) % rpcUrls.length;
+  }
+
+  List<int> _rpcAttemptOrder() {
+    final rpcUrls = _validatedRpcUrls();
+    if (rpcUrls.isEmpty) return const [];
+
+    final order = <int>[];
+    for (var offset = 0; offset < rpcUrls.length; offset++) {
+      order.add((_activeRpcIndex + offset) % rpcUrls.length);
+    }
+    return order;
+  }
+
+  bool _isRetryableRpcError(Object error) {
+    final raw = error.toString().toLowerCase();
+
+    if (error is SocketException) return true;
+    if (error is HandshakeException) return true;
+    if (error is HttpException) return true;
+
+    if (raw.contains('socketexception')) return true;
+    if (raw.contains('handshakeexception')) return true;
+    if (raw.contains('failed host lookup')) return true;
+    if (raw.contains('connection closed before full header was received')) {
+      return true;
+    }
+    if (raw.contains('connection refused')) return true;
+    if (raw.contains('connection reset by peer')) return true;
+    if (raw.contains('network is unreachable')) return true;
+    if (raw.contains('software caused connection abort')) return true;
+    if (raw.contains('timed out')) return true;
+    if (raw.contains('timeout')) return true;
+    if (raw.contains('http exception')) return true;
+    if (raw.contains('clientexception')) return true;
+    if (raw.contains('tls')) return true;
+    if (raw.contains('handshake')) return true;
+    if (raw.contains('502 bad gateway')) return true;
+    if (raw.contains('503 service unavailable')) return true;
+    if (raw.contains('504 gateway timeout')) return true;
+
+    return false;
+  }
+
+  Web3Client _web3ForUrl(String rpcUrl) {
+    return Web3Client(rpcUrl, client);
+  }
+
+  Future<T> _executeReadWithFallback<T>(
+    Future<T> Function(Web3Client web3) action,
+  ) async {
+    final order = _rpcAttemptOrder();
+    Object? lastError;
+
+    for (final index in order) {
+      final rpcUrl = _validatedRpcUrls()[index];
+      final web3 = _web3ForUrl(rpcUrl);
+
+      try {
+        final result = await action(web3);
+        _promoteRpcIndex(index);
+        return result;
+      } catch (error) {
+        lastError = error;
+
+        if (!_isRetryableRpcError(error)) {
+          rethrow;
+        }
+      } finally {
+        web3.dispose();
+      }
+    }
+
+    if (lastError != null) {
+      throw lastError;
+    }
+
+    throw StateError('No RPC endpoints available');
+  }
+
+  Future<T> _executeWriteOnActiveRpc<T>(
+    Future<T> Function(Web3Client web3) action,
+  ) async {
+    final rpcUrl = activeRpcUrl;
+    final web3 = _web3ForUrl(rpcUrl);
+
+    try {
+      final result = await action(web3);
+      return result;
+    } catch (error) {
+      if (_isRetryableRpcError(error)) {
+        _advanceRpcIndex();
+      }
+      rethrow;
+    } finally {
+      web3.dispose();
+    }
   }
 
   Future<NetworkInfo> getNetworkInfo() async {
-    final web3 = _web3();
-    try {
+    return _executeReadWithFallback((web3) async {
       final chainId = await web3.getChainId();
       final gasPrice = await web3.getGasPrice();
       final block = await web3.getBlockNumber();
@@ -60,9 +180,7 @@ class ScaviumRpcService {
         gasPriceWei: gasPrice.getInWei,
         latestBlock: block,
       );
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<EthereumAddress> getCurrentAddress() async {
@@ -88,36 +206,32 @@ class ScaviumRpcService {
   }
 
   Future<EtherAmount> getNativeBalance() async {
-    final web3 = _web3();
-    try {
-      final address = await getCurrentAddress();
+    final address = await getCurrentAddress();
+
+    return _executeReadWithFallback((web3) async {
       return web3.getBalance(address);
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<BigInt> estimateGasForNativeTransfer({
     required EthereumAddress to,
     required EtherAmount value,
   }) async {
-    final web3 = _web3();
-    try {
-      final from = await getCurrentAddress();
-      return await web3.estimateGas(sender: from, to: to, value: value);
-    } finally {
-      web3.dispose();
-    }
+    final from = await getCurrentAddress();
+
+    return _executeReadWithFallback((web3) async {
+      return web3.estimateGas(sender: from, to: to, value: value);
+    });
   }
 
   Future<TransactionSendResult> sendNativeTransaction({
     required String toAddress,
     required EtherAmount amount,
   }) async {
-    final web3 = _web3();
-    try {
-      final credentials = await getCredentials();
-      final to = EthereumAddress.fromHex(toAddress);
+    final credentials = await getCredentials();
+    final to = EthereumAddress.fromHex(toAddress);
+
+    return _executeWriteOnActiveRpc((web3) async {
       final txHash = await web3.sendTransaction(
         credentials,
         Transaction(to: to, value: amount),
@@ -128,9 +242,7 @@ class ScaviumRpcService {
       final receipt = await waitForReceipt(txHash);
 
       return TransactionSendResult(txHash: txHash, confirmed: receipt == true);
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   DeployedContract _erc20Contract(String contractAddress) {
@@ -142,10 +254,9 @@ class ScaviumRpcService {
   }
 
   Future<TokenInfo> loadTokenMetadata(String contractAddress) async {
-    final web3 = _web3();
-    try {
-      final contract = _erc20Contract(contractAddress);
+    final contract = _erc20Contract(contractAddress);
 
+    return _executeReadWithFallback((web3) async {
       final nameFn = contract.function('name');
       final symbolFn = contract.function('symbol');
       final decimalsFn = contract.function('decimals');
@@ -198,18 +309,15 @@ class ScaviumRpcService {
         symbol: symbol.isEmpty ? 'TOKEN' : symbol,
         decimals: decimals,
       );
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<BigInt> getErc20Balance(String contractAddress) async {
-    final web3 = _web3();
-    try {
-      final owner = await getCurrentAddress();
-      final contract = _erc20Contract(contractAddress);
-      final fn = contract.function('balanceOf');
+    final owner = await getCurrentAddress();
+    final contract = _erc20Contract(contractAddress);
+    final fn = contract.function('balanceOf');
 
+    return _executeReadWithFallback((web3) async {
       final result = await web3.call(
         contract: contract,
         function: fn,
@@ -217,9 +325,7 @@ class ScaviumRpcService {
       );
 
       return result.first as BigInt;
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<BigInt> estimateGasForErc20Transfer({
@@ -227,24 +333,18 @@ class ScaviumRpcService {
     required String toAddress,
     required BigInt amountRaw,
   }) async {
-    final web3 = _web3();
-    try {
-      final sender = await getCurrentAddress();
-      final contract = _erc20Contract(contractAddress);
-      final fn = contract.function('transfer');
-      final data = fn.encodeCall([
-        EthereumAddress.fromHex(toAddress),
-        amountRaw,
-      ]);
+    final sender = await getCurrentAddress();
+    final contract = _erc20Contract(contractAddress);
+    final fn = contract.function('transfer');
+    final data = fn.encodeCall([EthereumAddress.fromHex(toAddress), amountRaw]);
 
+    return _executeReadWithFallback((web3) async {
       return web3.estimateGas(
         sender: sender,
         to: EthereumAddress.fromHex(contractAddress),
         data: data,
       );
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<TransactionSendResult> sendErc20Transaction({
@@ -252,12 +352,11 @@ class ScaviumRpcService {
     required String toAddress,
     required BigInt amountRaw,
   }) async {
-    final web3 = _web3();
-    try {
-      final credentials = await getCredentials();
-      final contract = _erc20Contract(contractAddress);
-      final fn = contract.function('transfer');
+    final credentials = await getCredentials();
+    final contract = _erc20Contract(contractAddress);
+    final fn = contract.function('transfer');
 
+    return _executeWriteOnActiveRpc((web3) async {
       final txHash = await web3.sendTransaction(
         credentials,
         Transaction.callContract(
@@ -272,18 +371,13 @@ class ScaviumRpcService {
       final receipt = await waitForReceipt(txHash);
 
       return TransactionSendResult(txHash: txHash, confirmed: receipt == true);
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<TransactionReceipt?> getReceipt(String txHash) async {
-    final web3 = _web3();
-    try {
+    return _executeReadWithFallback((web3) async {
       return web3.getTransactionReceipt(txHash);
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<bool?> waitForReceipt(
@@ -291,19 +385,20 @@ class ScaviumRpcService {
     int maxAttempts = 20,
     Duration delay = const Duration(seconds: 3),
   }) async {
-    final web3 = _web3();
-    try {
-      for (var i = 0; i < maxAttempts; i++) {
-        final receipt = await web3.getTransactionReceipt(txHash);
+    for (var i = 0; i < maxAttempts; i++) {
+      try {
+        final receipt = await getReceipt(txHash);
         if (receipt != null) {
           return receipt.status ?? true;
         }
-        await Future<void>.delayed(delay);
+      } catch (_) {
+        // dejamos que el polling continúe con el RPC activo/fallback
       }
-      return null;
-    } finally {
-      web3.dispose();
+
+      await Future<void>.delayed(delay);
     }
+
+    return null;
   }
 
   String explorerAddressUrl(String address) {
@@ -315,13 +410,10 @@ class ScaviumRpcService {
   }
 
   Future<BigInt> getCurrentGasPriceWei() async {
-    final web3 = _web3();
-    try {
+    return _executeReadWithFallback((web3) async {
       final gasPrice = await web3.getGasPrice();
       return gasPrice.getInWei;
-    } finally {
-      web3.dispose();
-    }
+    });
   }
 
   Future<String> normalizeRpcError(Object error) async {
@@ -341,6 +433,10 @@ class ScaviumRpcService {
 
     if (raw.contains('SocketException')) {
       return 'No se pudo conectar al nodo RPC.';
+    }
+
+    if (raw.contains('HandshakeException')) {
+      return 'No se pudo establecer una conexión segura con el nodo RPC.';
     }
 
     if (raw.contains('Invalid argument')) {
