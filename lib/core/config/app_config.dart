@@ -3,7 +3,7 @@ import 'package:scavium_wallet/core/config/app_flavor.dart';
 class AppConfig {
   final AppFlavor flavor;
   final String appName;
-  final String rpcUrl;
+  final List<String> rpcUrls;
   final String explorerBaseUrl;
   final int chainId;
   final String nativeSymbol;
@@ -12,12 +12,21 @@ class AppConfig {
   const AppConfig({
     required this.flavor,
     required this.appName,
-    required this.rpcUrl,
+    required this.rpcUrls,
     required this.explorerBaseUrl,
     required this.chainId,
     required this.nativeSymbol,
     required this.nativeDecimals,
   });
+
+  /// Compatibilidad total con el código existente.
+  /// Durante esta fase seguimos usando el primer endpoint como primario.
+  String get rpcUrl {
+    if (rpcUrls.isEmpty) {
+      throw StateError('AppConfig.rpcUrls no puede estar vacío');
+    }
+    return rpcUrls.first;
+  }
 
   String get addressExplorerPath => '$explorerBaseUrl/address';
   String get txExplorerPath => '$explorerBaseUrl/tx';
@@ -25,10 +34,13 @@ class AppConfig {
   static const current = AppConfig(
     flavor: AppFlavor.dev,
     appName: 'SCAVIUM Wallet',
-    rpcUrl: 'http://rpc.testnet.scavium.network:18545',
+    rpcUrls: [
+      'https://r01.testnet.scavium.network',
+      'https://r02.testnet.scavium.network',
+    ],
     explorerBaseUrl: 'https://explorer.testnet.scavium.network',
     chainId: 1987374788,
-    nativeSymbol: 'SCAV',
+    nativeSymbol: 'SCV',
     nativeDecimals: 18,
   );
 }

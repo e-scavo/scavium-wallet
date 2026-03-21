@@ -41,22 +41,26 @@ class _SendScreenState extends ConsumerState<SendScreen> {
   }
 
   Future<void> _prepareSend() async {
+    if (!mounted) return;
     setState(() => _error = null);
 
     final to = _toCtrl.text.trim();
     final amountText = _amountCtrl.text.trim();
 
     if (!EvmAddressUtils.isValidAddress(to)) {
+      if (!mounted) return;
       setState(() => _error = 'Dirección inválida');
       return;
     }
 
     if (!EvmAmounts.isPositiveDecimal(amountText)) {
+      if (!mounted) return;
       setState(() => _error = 'Monto inválido');
       return;
     }
 
     if (EvmAmounts.hasTooManyDecimals(amountText, 18)) {
+      if (!mounted) return;
       setState(() => _error = 'Demasiados decimales');
       return;
     }
@@ -65,6 +69,7 @@ class _SendScreenState extends ConsumerState<SendScreen> {
         ref.read(walletControllerProvider).valueOrNull?.account.address;
     if (currentAddress != null &&
         currentAddress.toLowerCase() == to.toLowerCase()) {
+      if (!mounted) return;
       setState(() => _error = 'No podés enviarte fondos a vos mismo');
       return;
     }
@@ -77,13 +82,18 @@ class _SendScreenState extends ConsumerState<SendScreen> {
     final amount = double.tryParse(amountText.replaceAll(',', '.')) ?? 0;
 
     if (amount > balance) {
+      if (!mounted) return;
       setState(() => _error = 'Saldo insuficiente');
       return;
     }
 
-    await ref
-        .read(nativeSendPreviewControllerProvider.notifier)
-        .buildPreview(toAddress: to, amountText: amountText);
+    final previewNotifier = ref.read(
+      nativeSendPreviewControllerProvider.notifier,
+    );
+
+    await previewNotifier.buildPreview(toAddress: to, amountText: amountText);
+
+    if (!mounted) return;
 
     final previewState = ref.read(nativeSendPreviewControllerProvider);
 
@@ -93,7 +103,7 @@ class _SendScreenState extends ConsumerState<SendScreen> {
     }
 
     final preview = previewState.valueOrNull;
-    if (preview == null || !mounted) return;
+    if (preview == null) return;
 
     final previewFee =
         double.tryParse(
@@ -116,28 +126,31 @@ class _SendScreenState extends ConsumerState<SendScreen> {
         );
       },
     );
+
+    if (!mounted) return;
   }
 
   Future<void> _sendConfirmed() async {
     final to = _toCtrl.text.trim();
     final amountText = _amountCtrl.text.trim();
 
-    await ref
-        .read(sendTransactionControllerProvider.notifier)
-        .sendNative(toAddress: to, amountText: amountText);
+    final sendNotifier = ref.read(sendTransactionControllerProvider.notifier);
+
+    await sendNotifier.sendNative(toAddress: to, amountText: amountText);
+
+    if (!mounted) return;
 
     final state = ref.read(sendTransactionControllerProvider);
 
     if (state.hasError) {
-      if (!mounted) return;
       setState(() => _error = state.error.toString());
       return;
     }
 
     final txHash = state.valueOrNull?.txHash;
-    if (txHash == null || !mounted) return;
+    if (txHash == null) return;
 
-    showDialog<void>(
+    await showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -168,6 +181,8 @@ class _SendScreenState extends ConsumerState<SendScreen> {
         );
       },
     );
+
+    if (!mounted) return;
   }
 
   @override

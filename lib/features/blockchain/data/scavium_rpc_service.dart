@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:scavium_wallet/core/config/app_config.dart';
+import 'package:scavium_wallet/core/utils/rpc_url_validator.dart';
 import 'package:scavium_wallet/features/assets/domain/token_info.dart';
 import 'package:scavium_wallet/features/blockchain/domain/network_info.dart';
 import 'package:scavium_wallet/features/blockchain/domain/transaction_send_result.dart';
@@ -38,8 +39,13 @@ class ScaviumRpcService {
 ]
 ''';
 
+  String _activeRpcUrl() {
+    RpcUrlValidator.validateAll(AppConfig.current.rpcUrls);
+    return AppConfig.current.rpcUrl;
+  }
+
   Web3Client _web3() {
-    return Web3Client(AppConfig.current.rpcUrl, client);
+    return Web3Client(_activeRpcUrl(), client);
   }
 
   Future<NetworkInfo> getNetworkInfo() async {
