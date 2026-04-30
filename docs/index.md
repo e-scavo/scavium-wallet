@@ -23,4 +23,7 @@
 - Phase 7 — Stabilization, Bug Fixing, and Release Candidate Hardening  
   phase7_scavium_wallet.md
 
+- Phase 8 — Product Expansion & Production Maturity  
+  phase8_scavium_wallet.md
+
 ---

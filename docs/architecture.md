@@ -9,6 +9,7 @@ SCAVIUM Wallet follows a **modular, feature-driven architecture** designed for:
 - clear separation of concerns
 - production-grade reliability
 - low-risk release stabilization
+- controlled product expansion from a stable baseline
 
 The system is structured around **Flutter + Riverpod + Web3dart**.
 
@@ -171,6 +172,32 @@ Concrete examples include:
 
 ---
 
+## 🧭 Phase 8 Product Expansion Model
+
+From Phase 8 onward, the architecture is allowed to expand product capabilities, but only through bounded and incremental subphases.
+
+The following architectural commitments remain unchanged:
+
+- Riverpod remains the state-management layer
+- GoRouter remains the navigation layer
+- secure storage remains responsible for sensitive wallet material
+- backup and restore must remain compatible with wallet persistence semantics
+- release tooling remains stable until release-maturity work explicitly modifies it
+
+Phase 8 expansion areas are expected to build on the existing feature structure instead of replacing it.
+
+The intended expansion path is:
+
+1. account model expansion
+2. account-aware asset and portfolio structure
+3. navigation shell evolution
+4. transaction, activity, and signing maturity
+5. security, diagnostics, and release maturity extension
+
+This allows the wallet to grow beyond the current dashboard-centered model without turning product expansion into a broad architecture rewrite.
+
+---
+
 ## 🎯 Result
 
 The architecture enables:
@@ -181,3 +208,4 @@ The architecture enables:
 - explicit and user-managed wallet recovery
 - extensibility for future features (DEX, multi-account, etc)
 - controlled release candidate hardening without destabilizing the codebase
+- controlled Phase 8 product expansion without replacing the established architecture

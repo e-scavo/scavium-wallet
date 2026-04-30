@@ -105,6 +105,31 @@ This results in:
 
 ---
 
+## 🧭 Phase 8 Product Surface UX
+
+Phase 8 expands the wallet from a stabilized product surface toward a scalable multi-surface UX.
+
+The UX direction includes:
+
+- preserving the existing wallet usability baseline
+- avoiding one-page overload as features grow
+- introducing clearer screen segmentation
+- supporting desktop and web sidebar-oriented navigation where appropriate
+- supporting mobile drawer or bottom navigation where appropriate
+- keeping sensitive actions explicit and reviewable
+
+Planned Phase 8 surfaces include:
+
+- Home / Dashboard
+- Wallet / Accounts
+- Assets
+- Activity
+- Settings
+
+Message signing UX must remain safety-oriented and must include message preview, explicit confirmation, cancellation, and clear result handling.
+
+---
+
 ## 📊 RPC Transparency
 
 User can see:
@@ -120,3 +145,5 @@ User can see:
 The wallet should:
 
 > make blockchain complexity invisible, without hiding critical information
+
+Phase 8 extends this philosophy by allowing more product capability only when navigation, confirmation, and safety expectations remain clear.

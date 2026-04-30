@@ -2,9 +2,11 @@
 
 ## 🧭 Overview
 
-This document lists all implemented features up to the current stabilization phase.
+This document lists implemented features up to the completed stabilization phase and records the Phase 8 expansion direction.
 
-Phase 7 does not add new unrelated product scope. It hardens and validates the existing product while adding essential safety and operational capabilities where needed.
+Phase 7 did not add new unrelated product scope. It hardened and validated the existing product while adding essential safety and operational capabilities where needed.
+
+Phase 8 begins controlled product expansion from that stabilized baseline. Planned capabilities are documented separately until implemented.
 
 ---
 
@@ -109,6 +111,25 @@ The encrypted backup flow includes:
 
 ---
 
+## 🧭 Phase 8 Expansion Direction
+
+Phase 8 introduces planned product expansion areas without treating them as implemented until their subphases are completed.
+
+Planned expansion areas include:
+
+- multi-account / multiple wallet support
+- account switcher and account metadata
+- richer asset and portfolio surfaces
+- account-aware asset organization
+- transaction and activity maturity
+- message signing with explicit preview and confirmation
+- multi-surface navigation for desktop, web, and mobile
+- additional security, reliability, and diagnostics maturity
+
+The current Phase 8.0 state is documentation-only. Runtime feature implementation begins in later Phase 8 subphases.
+
+---
+
 ## 🛠️ Stabilization Notes
 
 Phase 7.1 did not introduce a new feature.
@@ -135,4 +156,6 @@ It added encrypted backup export and restore, giving users a practical recovery 
 
 ## 🎯 Summary
 
-The wallet supports all core operations required for a functional EVM wallet and is now in a stabilization stage focused on release quality, operational consistency, and safer real-world recovery behavior.
+The wallet supports all core operations required for a functional EVM wallet and has completed a stabilization stage focused on release quality, operational consistency, and safer real-world recovery behavior.
+
+Phase 8 builds on that baseline to expand the product surface in controlled, documented, and incrementally validated subphases.
