@@ -270,3 +270,14 @@ The repository remains the persistence owner. The wallet controller remains the 
 The active account is resolved from `WalletProfile.accounts` and persisted through `wallet_active_account_id`. The default account remains independent and is persisted through `wallet_default_account_id`.
 
 This keeps the architecture prepared for an account switcher without introducing new routes, new surfaces, backup changes, or release pipeline changes in this subphase.
+
+## Phase 8.1.5 — Account Creation Architecture Note
+
+Account creation/import remains owned by the wallet feature boundary:
+
+- presentation opens the add-account sheet from the account switcher;
+- `WalletController` exposes account-addition commands;
+- `WalletRepository` defines derived/imported account creation contracts;
+- `WalletRepositoryImpl` owns derivation, validation, duplicate protection, secure persistence, and active-account refresh.
+
+The architecture deliberately keeps account metadata separate from imported private-key material. Account metadata is persisted in multi-account JSON storage, while imported private keys are stored through secure storage under account-key mapping. Backup v2 is not introduced in this phase.

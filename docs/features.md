@@ -204,3 +204,16 @@ Not implemented in this subphase:
 - deleting accounts
 - editing labels
 - changing backup/restore payloads
+
+## Phase 8.1.5 — Account Creation & Import Expansion
+
+SCAVIUM Wallet now supports adding additional accounts on top of the multi-account foundation:
+
+- derived accounts for mnemonic wallets;
+- imported private-key accounts;
+- secure storage for imported account private keys;
+- duplicate account address protection;
+- automatic activation of the newly added account;
+- minimal add-account UI from the account switcher.
+
+Backup/restore v1 remains unchanged in this phase. Backup v2 compatibility is intentionally deferred to a later explicit subphase.

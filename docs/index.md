@@ -44,3 +44,5 @@
 
 - 8.1.4 — Account Switcher Basic UI  
   Adds a minimal UI surface for displaying and selecting among already-known accounts without introducing account creation, deletion, backup changes, route changes, or release changes.
+
+- Phase 8.1.5 — Account Creation & Import Expansion: adds minimal derived/imported account creation over the existing multi-account foundation without changing backup v1 or release automation.

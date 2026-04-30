@@ -321,3 +321,11 @@ The wallet still does not create, import, edit, or delete additional accounts fr
 Single-account wallets remain fully compatible and show the current account as the only selectable account.
 
 No route changes, backup/restore changes, build changes, or release workflow changes are introduced in this subphase.
+# Launch Screen Assets
+
+You can customize the launch screen with your own desired assets by replacing the image files in this directory.
+
+You can also do it by opening your Flutter project's Xcode project with `open ios/Runner.xcworkspace`, selecting `Runner/Assets.xcassets` in the Project Navigator and dropping in the desired images.
+### Phase 8.1.5 — Account Creation & Import Expansion
+
+Phase 8.1.5 converts the multi-account foundation into minimal user-facing functionality by allowing additional derived accounts and imported private-key accounts to be added from the account switcher. Backup v1, routing, build automation, and release automation remain unchanged.

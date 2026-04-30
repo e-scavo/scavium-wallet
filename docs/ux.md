@@ -164,3 +164,12 @@ The wallet should:
 > make blockchain complexity invisible, without hiding critical information
 
 Phase 8 extends this philosophy by allowing more product capability only when navigation, confirmation, and safety expectations remain clear.
+## Phase 8.1.5 — Add Account UX
+
+The account switcher now provides a minimal account-addition entry point. The UX remains intentionally small and reversible:
+
+- users can add a derived account when the wallet has a mnemonic;
+- users can import an additional private-key account;
+- unsupported derived-account creation is disabled for private-key-only wallets;
+- successful account addition activates the new account immediately;
+- no deletion, rename, or advanced account management UX is introduced yet.

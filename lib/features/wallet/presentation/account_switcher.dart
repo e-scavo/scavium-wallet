@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scavium_wallet/features/wallet/application/wallet_controller.dart';
+import 'package:scavium_wallet/features/wallet/presentation/add_account_sheet.dart';
 import 'package:scavium_wallet/features/wallet/domain/wallet_account.dart';
 import 'package:scavium_wallet/features/wallet/domain/wallet_profile.dart';
 
@@ -66,6 +67,17 @@ class AccountSwitcher extends ConsumerWidget {
                         .setActiveAccount(accountId);
                   }
                   : null,
+        ),
+        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed:
+                () => showAddAccountSheet(context, profile: resolvedProfile),
+            icon: const Icon(Icons.add),
+            label: const Text('Add account'),
+          ),
         ),
         const SizedBox(height: 10),
         SelectableText(

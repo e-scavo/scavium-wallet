@@ -31,7 +31,8 @@ class WalletRepositoryImpl implements WalletRepository {
     required this.localStorage,
   });
 
-  static const _derivationPath = "m/44'/60'/0'/0/0";
+  static String _derivationPathForIndex(int accountIndex) =>
+      "m/44'/60'/0'/0/$accountIndex";
   static const _walletStorageVersion = '2';
 
   @override
@@ -88,6 +89,7 @@ class WalletRepositoryImpl implements WalletRepository {
       );
 
       await secureStorage.delete(StorageKeys.walletPrivateKey);
+      await secureStorage.delete(StorageKeys.walletImportedPrivateKeysJson);
 
       final account = _buildSingleAccount(
         accountName: accountName,
@@ -167,11 +169,16 @@ class WalletRepositoryImpl implements WalletRepository {
       );
 
       await secureStorage.delete(StorageKeys.walletMnemonic);
+      await secureStorage.delete(StorageKeys.walletImportedPrivateKeysJson);
 
       final account = _buildSingleAccount(
         accountName: accountName,
         address: address.hexEip55,
         isImportedByPrivateKey: true,
+      );
+      await _persistImportedPrivateKeyForAccount(
+        accountId: account.id,
+        privateKey: normalized,
       );
       await _persistMultiAccountMetadata(
         accounts: <WalletAccount>[account],
@@ -213,6 +220,77 @@ class WalletRepositoryImpl implements WalletRepository {
       await _clearWalletAvailabilityFlags();
       rethrow;
     }
+  }
+
+  @override
+  Future<WalletProfile> restoreWalletBackup(WalletBackupPayload payload) async {
+    payload.validate();
+
+    late final WalletProfile restoredProfile;
+
+    if (payload.wallet.type == ImportedWalletType.mnemonic.name) {
+      final mnemonic = payload.wallet.mnemonic;
+      if (mnemonic == null || mnemonic.trim().isEmpty) {
+        throw Exception('Backup mnemonic is missing');
+      }
+
+      restoredProfile = await importWalletFromMnemonic(
+        mnemonic: mnemonic,
+        accountName: payload.wallet.accountName,
+      );
+    } else if (payload.wallet.type == ImportedWalletType.privateKey.name) {
+      final privateKey = payload.wallet.privateKey;
+      if (privateKey == null || privateKey.trim().isEmpty) {
+        throw Exception('Backup private key is missing');
+      }
+
+      restoredProfile = await importWalletFromPrivateKey(
+        privateKey: privateKey,
+        accountName: payload.wallet.accountName,
+      );
+    } else {
+      throw Exception('Unsupported backup wallet type');
+    }
+
+    if (payload.version < 2 || payload.accounts.isEmpty) {
+      return restoredProfile;
+    }
+
+    final restoredAccounts = payload.accounts
+        .map((account) => account.toWalletAccount())
+        .toList(growable: false);
+    final defaultAccountId = _resolveStoredAccountId(
+      accounts: restoredAccounts,
+      preferredAccountId: payload.defaultAccountId,
+      fallbackAccountId: restoredProfile.defaultAccountId,
+    );
+    final activeAccountId = _resolveStoredAccountId(
+      accounts: restoredAccounts,
+      preferredAccountId: payload.activeAccountId,
+      fallbackAccountId: defaultAccountId,
+    );
+    final activeAccount = _resolveAccountById(
+      accounts: restoredAccounts,
+      accountId: activeAccountId,
+    );
+    final normalizedAccounts = _normalizeStoredAccountFlags(
+      accounts: restoredAccounts,
+      activeAccountId: activeAccountId,
+      defaultAccountId: defaultAccountId,
+    );
+
+    await _persistMultiAccountMetadata(
+      accounts: normalizedAccounts,
+      activeAccountId: activeAccountId,
+      defaultAccountId: defaultAccountId,
+    );
+
+    return restoredProfile.copyWith(
+      account: activeAccount.copyWith(isActive: true),
+      accounts: normalizedAccounts,
+      activeAccountId: activeAccountId,
+      defaultAccountId: defaultAccountId,
+    );
   }
 
   @override
@@ -501,117 +579,173 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Future<WalletProfile> restoreWalletBackup(WalletBackupPayload payload) async {
-    payload.validate();
-
-    if (payload.wallet.type == ImportedWalletType.mnemonic.name) {
-      final mnemonic = payload.wallet.mnemonic;
-      if (mnemonic == null || mnemonic.trim().isEmpty) {
-        throw Exception('Backup mnemonic is missing');
-      }
-
-      final restoredAddress = await _addressFromMnemonic(mnemonic);
-      _validateBackupWalletAddress(payload, restoredAddress);
-
-      if (payload.version == 2) {
-        _validateCurrentRuntimeBackupAccounts(payload);
-      }
-
-      final profile = await importWalletFromMnemonic(
-        mnemonic: mnemonic,
-        accountName: payload.wallet.accountName,
-      );
-
-      return _restoreAccountMetadataIfAvailable(payload, profile);
+  Future<WalletProfile> addDerivedAccount({required String accountName}) async {
+    final profile = await loadWalletProfile();
+    if (profile == null) {
+      throw StateError('No wallet profile is loaded');
     }
 
-    if (payload.wallet.type == ImportedWalletType.privateKey.name) {
-      final privateKey = payload.wallet.privateKey;
-      if (privateKey == null || privateKey.trim().isEmpty) {
-        throw Exception('Backup private key is missing');
-      }
-
-      final restoredAddress = await _addressFromPrivateKey(privateKey);
-      _validateBackupWalletAddress(payload, restoredAddress);
-
-      if (payload.version == 2) {
-        _validateCurrentRuntimeBackupAccounts(payload);
-      }
-
-      final profile = await importWalletFromPrivateKey(
-        privateKey: privateKey,
-        accountName: payload.wallet.accountName,
-      );
-
-      return _restoreAccountMetadataIfAvailable(payload, profile);
+    final mnemonic = await secureStorage.read(StorageKeys.walletMnemonic);
+    if (mnemonic == null || mnemonic.trim().isEmpty) {
+      throw StateError('Derived accounts require a mnemonic wallet');
     }
 
-    throw Exception('Unsupported backup wallet type');
+    final accountIndex = _nextAccountIndex(profile.accounts);
+    final credentials = _credentialsFromMnemonicAtIndex(mnemonic, accountIndex);
+    final address = await credentials.extractAddress();
+
+    _ensureUniqueAccountAddress(
+      accounts: profile.accounts,
+      address: address.hexEip55,
+    );
+
+    final now = DateTime.now().toUtc();
+    final account = WalletAccount(
+      name: _normalizeAccountName(accountName, accountIndex),
+      address: address.hexEip55,
+      accountIndex: accountIndex,
+      isImportedByPrivateKey: false,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    return _appendAndActivateAccount(profile: profile, account: account);
   }
 
-  Future<WalletProfile> _restoreAccountMetadataIfAvailable(
-    WalletBackupPayload payload,
-    WalletProfile importedProfile,
-  ) async {
-    if (payload.version != 2) {
-      return importedProfile;
+  @override
+  Future<WalletProfile> addPrivateKeyAccount({
+    required String privateKey,
+    required String accountName,
+  }) async {
+    final profile = await loadWalletProfile();
+    if (profile == null) {
+      throw StateError('No wallet profile is loaded');
     }
 
-    final accounts =
-        payload.accounts
-            .map((backupAccount) => backupAccount.toWalletAccount())
-            .toList(growable: false);
-    final activeAccountId = payload.activeAccountId!;
-    final defaultAccountId = payload.defaultAccountId!;
+    final normalizedPrivateKey = _normalizePrivateKey(privateKey);
+    if (!_isValidPrivateKey(normalizedPrivateKey)) {
+      throw Exception('Private key inválida');
+    }
+
+    final credentials = EthPrivateKey.fromHex(normalizedPrivateKey);
+    final address = await credentials.extractAddress();
+
+    _ensureUniqueAccountAddress(
+      accounts: profile.accounts,
+      address: address.hexEip55,
+    );
+
+    final accountIndex = _nextAccountIndex(profile.accounts);
+    final now = DateTime.now().toUtc();
+    final account = WalletAccount(
+      name: _normalizeAccountName(accountName, accountIndex),
+      address: address.hexEip55,
+      accountIndex: accountIndex,
+      isImportedByPrivateKey: true,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await _persistImportedPrivateKeyForAccount(
+      accountId: account.id,
+      privateKey: normalizedPrivateKey,
+    );
+
+    return _appendAndActivateAccount(profile: profile, account: account);
+  }
+
+  Future<WalletProfile> _appendAndActivateAccount({
+    required WalletProfile profile,
+    required WalletAccount account,
+  }) async {
+    final accounts = <WalletAccount>[...profile.accounts, account];
+    final normalizedAccounts = _normalizeStoredAccountFlags(
+      accounts: accounts,
+      activeAccountId: account.id,
+      defaultAccountId: profile.defaultAccountId,
+    );
 
     await _persistMultiAccountMetadata(
-      accounts: accounts,
-      activeAccountId: activeAccountId,
-      defaultAccountId: defaultAccountId,
+      accounts: normalizedAccounts,
+      activeAccountId: account.id,
+      defaultAccountId: profile.defaultAccountId,
     );
 
-    final activeAccount = _resolveRequiredAccountById(
-      accounts: accounts,
-      accountId: activeAccountId,
-    );
-
-    return importedProfile.copyWith(
-      account: activeAccount,
-      accounts: _normalizeStoredAccountFlags(
-        accounts: accounts,
-        activeAccountId: activeAccountId,
-        defaultAccountId: defaultAccountId,
-      ),
-      activeAccountId: activeAccountId,
-      defaultAccountId: defaultAccountId,
+    return profile.copyWith(
+      account: account.copyWith(isActive: true),
+      accounts: normalizedAccounts,
+      activeAccountId: account.id,
     );
   }
 
-  void _validateBackupWalletAddress(
-    WalletBackupPayload payload,
-    String restoredAddress,
-  ) {
-    if (!_sameAddress(payload.wallet.address, restoredAddress)) {
-      throw Exception('Backup wallet address does not match restored key');
+  int _nextAccountIndex(List<WalletAccount> accounts) {
+    if (accounts.isEmpty) {
+      return 0;
+    }
+
+    final highestIndex = accounts
+        .map((account) => account.accountIndex)
+        .reduce((value, element) => value > element ? value : element);
+    return highestIndex + 1;
+  }
+
+  String _normalizeAccountName(String accountName, int accountIndex) {
+    final normalized = accountName.trim();
+    if (normalized.isNotEmpty) {
+      return normalized;
+    }
+    return 'Account ${accountIndex + 1}';
+  }
+
+  void _ensureUniqueAccountAddress({
+    required List<WalletAccount> accounts,
+    required String address,
+  }) {
+    final normalizedAddress = address.trim().toLowerCase();
+    final alreadyExists = accounts.any(
+      (account) => account.address.trim().toLowerCase() == normalizedAddress,
+    );
+
+    if (alreadyExists) {
+      throw StateError('Account already exists in this wallet');
     }
   }
 
-  void _validateCurrentRuntimeBackupAccounts(WalletBackupPayload payload) {
-    if (payload.accounts.length != 1) {
-      throw Exception(
-        'Multi-account backup restore is not supported by this wallet version',
-      );
+  Future<Map<String, String>> _readImportedPrivateKeys() async {
+    final raw = await secureStorage.read(
+      StorageKeys.walletImportedPrivateKeysJson,
+    );
+
+    if (raw == null || raw.trim().isEmpty) {
+      return <String, String>{};
     }
 
-    final account = payload.accounts.single;
-    if (!_sameAddress(account.address, payload.wallet.address)) {
-      throw Exception('Backup account does not match wallet address');
-    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) {
+        return <String, String>{};
+      }
 
-    if (payload.activeAccountId != account.id ||
-        payload.defaultAccountId != account.id) {
-      throw Exception('Backup account selection is not compatible');
+      return decoded.map((key, value) => MapEntry(key, value?.toString() ?? ''))
+        ..removeWhere(
+          (key, value) => key.trim().isEmpty || value.trim().isEmpty,
+        );
+    } catch (_) {
+      return <String, String>{};
     }
+  }
+
+  Future<void> _persistImportedPrivateKeyForAccount({
+    required String accountId,
+    required String privateKey,
+  }) async {
+    final importedPrivateKeys = await _readImportedPrivateKeys();
+    importedPrivateKeys[accountId] = privateKey;
+
+    await secureStorage.writeAndVerify(
+      StorageKeys.walletImportedPrivateKeysJson,
+      jsonEncode(importedPrivateKeys),
+    );
   }
 
   @override
@@ -671,6 +805,7 @@ class WalletRepositoryImpl implements WalletRepository {
     await secureStorage.delete(StorageKeys.walletActiveAccountId);
     await secureStorage.delete(StorageKeys.walletDefaultAccountId);
     await secureStorage.delete(StorageKeys.walletStorageVersion);
+    await secureStorage.delete(StorageKeys.walletImportedPrivateKeysJson);
     await secureStorage.delete(StorageKeys.appPin);
 
     await localStorage.setBool(StorageKeys.walletCreated, false);
@@ -697,9 +832,16 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   EthPrivateKey _credentialsFromMnemonic(String mnemonic) {
-    final seed = bip39.mnemonicToSeed(mnemonic);
+    return _credentialsFromMnemonicAtIndex(mnemonic, 0);
+  }
+
+  EthPrivateKey _credentialsFromMnemonicAtIndex(
+    String mnemonic,
+    int accountIndex,
+  ) {
+    final seed = bip39.mnemonicToSeed(_normalizeMnemonic(mnemonic));
     final root = bip32.BIP32.fromSeed(seed);
-    final child = root.derivePath(_derivationPath);
+    final child = root.derivePath(_derivationPathForIndex(accountIndex));
 
     final privateKeyBytes = child.privateKey;
     if (privateKeyBytes == null) {
@@ -708,27 +850,6 @@ class WalletRepositoryImpl implements WalletRepository {
 
     final privateKeyHex = HEX.encode(privateKeyBytes);
     return EthPrivateKey.fromHex(privateKeyHex);
-  }
-
-  Future<String> _addressFromMnemonic(String mnemonic) async {
-    final credentials = _credentialsFromMnemonic(_normalizeMnemonic(mnemonic));
-    final address = await credentials.extractAddress();
-    return address.hexEip55;
-  }
-
-  Future<String> _addressFromPrivateKey(String privateKey) async {
-    final normalized = _normalizePrivateKey(privateKey);
-    if (!_isValidPrivateKey(normalized)) {
-      throw Exception('Private key invÃ¡lida');
-    }
-
-    final credentials = EthPrivateKey.fromHex(normalized);
-    final address = await credentials.extractAddress();
-    return address.hexEip55;
-  }
-
-  bool _sameAddress(String left, String right) {
-    return left.trim().toLowerCase() == right.trim().toLowerCase();
   }
 
   bool _isValidPrivateKey(String value) {

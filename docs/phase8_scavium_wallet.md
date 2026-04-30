@@ -1189,3 +1189,94 @@ Validation expectations:
 Next subphase:
 
 - 8.1.5 — Backup and restore compatibility upgrade, which can formalize backup payload evolution after the account model, storage foundation, controller path, and basic switcher surface are already in place.
+
+---
+
+## Phase 8.1.5 — Account Creation & Import Expansion
+
+### Status
+
+Implemented as a controlled functional expansion over the multi-account foundation introduced in 8.1.1, 8.1.2, 8.1.3, and 8.1.4.
+
+### Objective
+
+Enable the wallet to add real additional accounts while preserving the existing Phase 7 single-account compatibility model and without introducing backup v2 changes yet.
+
+### Scope
+
+This subphase introduces:
+
+- derived account creation for mnemonic wallets;
+- additional imported private-key accounts;
+- secure persistence for imported account private keys;
+- account append-and-activate behavior;
+- duplicate address protection;
+- a minimal add-account bottom sheet connected to the existing account switcher.
+
+### Compatibility Rules
+
+The implementation preserves the existing compatibility boundary:
+
+- the original legacy wallet keys remain valid;
+- backup/restore v1 remains unchanged;
+- routes remain unchanged;
+- release/build automation remains unchanged;
+- account switcher remains the only new user-facing entry point;
+- the existing active-account controller remains the runtime owner of account switching.
+
+### Storage Rules
+
+Additional accounts are persisted through the existing multi-account metadata store:
+
+- `wallet_accounts_json`
+- `wallet_active_account_id`
+- `wallet_default_account_id`
+- `wallet_storage_version`
+
+Imported account private keys are persisted separately in secure storage through:
+
+- `wallet_imported_private_keys_json`
+
+This avoids exposing imported private keys through account metadata and keeps backup v2 as a later, explicit compatibility phase.
+
+### Functional Behavior
+
+When a derived account is created:
+
+1. the current wallet profile is loaded;
+2. the existing mnemonic is required;
+3. the next available `accountIndex` is selected;
+4. the account is derived from the mnemonic;
+5. the account is appended to `accounts[]`;
+6. the new account becomes active.
+
+When a private-key account is imported:
+
+1. the private key is normalized and validated;
+2. the address is extracted;
+3. duplicate addresses are rejected;
+4. the private key is stored in secure account-key storage;
+5. the account is appended to `accounts[]`;
+6. the new account becomes active.
+
+### Explicit Non-Scope
+
+This subphase does not add:
+
+- account deletion;
+- account label editing;
+- backup payload v2;
+- route restructuring;
+- release pipeline changes;
+- full multi-surface navigation.
+
+### Validation Expectations
+
+The expected validation gate remains:
+
+```bash
+fvm flutter analyze
+fvm flutter test
+```
+
+The analyze baseline should not increase beyond known pre-existing issues.

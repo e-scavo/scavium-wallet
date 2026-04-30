@@ -103,6 +103,46 @@ class WalletController extends AsyncNotifier<WalletProfile?> {
     }
   }
 
+  Future<void> addDerivedAccount({required String accountName}) async {
+    final previousProfile = state.valueOrNull;
+    if (previousProfile == null) {
+      throw StateError('No wallet profile is loaded');
+    }
+
+    state = const AsyncLoading();
+    final repo = ref.read(walletRepositoryProvider);
+
+    try {
+      final profile = await repo.addDerivedAccount(accountName: accountName);
+      state = AsyncData(profile);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> addPrivateKeyAccount({
+    required String privateKey,
+    required String accountName,
+  }) async {
+    final previousProfile = state.valueOrNull;
+    if (previousProfile == null) {
+      throw StateError('No wallet profile is loaded');
+    }
+
+    state = const AsyncLoading();
+    final repo = ref.read(walletRepositoryProvider);
+
+    try {
+      final profile = await repo.addPrivateKeyAccount(
+        privateKey: privateKey,
+        accountName: accountName,
+      );
+      state = AsyncData(profile);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
   Future<String?> readMnemonic() async {
     final repo = ref.read(walletRepositoryProvider);
     return repo.readMnemonic();
