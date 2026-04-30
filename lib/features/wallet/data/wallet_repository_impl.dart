@@ -10,6 +10,7 @@ import 'package:scavium_wallet/core/services/local_storage_service.dart';
 import 'package:scavium_wallet/core/services/secure_storage_service.dart';
 import 'package:scavium_wallet/features/wallet/domain/imported_wallet_type.dart';
 import 'package:scavium_wallet/features/wallet/domain/wallet_account.dart';
+import 'package:scavium_wallet/features/wallet/domain/wallet_backup_payload.dart';
 import 'package:scavium_wallet/features/wallet/domain/wallet_profile.dart';
 import 'package:scavium_wallet/features/wallet/domain/wallet_repository.dart';
 import 'package:web3dart/web3dart.dart';
@@ -500,6 +501,120 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
+  Future<WalletProfile> restoreWalletBackup(WalletBackupPayload payload) async {
+    payload.validate();
+
+    if (payload.wallet.type == ImportedWalletType.mnemonic.name) {
+      final mnemonic = payload.wallet.mnemonic;
+      if (mnemonic == null || mnemonic.trim().isEmpty) {
+        throw Exception('Backup mnemonic is missing');
+      }
+
+      final restoredAddress = await _addressFromMnemonic(mnemonic);
+      _validateBackupWalletAddress(payload, restoredAddress);
+
+      if (payload.version == 2) {
+        _validateCurrentRuntimeBackupAccounts(payload);
+      }
+
+      final profile = await importWalletFromMnemonic(
+        mnemonic: mnemonic,
+        accountName: payload.wallet.accountName,
+      );
+
+      return _restoreAccountMetadataIfAvailable(payload, profile);
+    }
+
+    if (payload.wallet.type == ImportedWalletType.privateKey.name) {
+      final privateKey = payload.wallet.privateKey;
+      if (privateKey == null || privateKey.trim().isEmpty) {
+        throw Exception('Backup private key is missing');
+      }
+
+      final restoredAddress = await _addressFromPrivateKey(privateKey);
+      _validateBackupWalletAddress(payload, restoredAddress);
+
+      if (payload.version == 2) {
+        _validateCurrentRuntimeBackupAccounts(payload);
+      }
+
+      final profile = await importWalletFromPrivateKey(
+        privateKey: privateKey,
+        accountName: payload.wallet.accountName,
+      );
+
+      return _restoreAccountMetadataIfAvailable(payload, profile);
+    }
+
+    throw Exception('Unsupported backup wallet type');
+  }
+
+  Future<WalletProfile> _restoreAccountMetadataIfAvailable(
+    WalletBackupPayload payload,
+    WalletProfile importedProfile,
+  ) async {
+    if (payload.version != 2) {
+      return importedProfile;
+    }
+
+    final accounts =
+        payload.accounts
+            .map((backupAccount) => backupAccount.toWalletAccount())
+            .toList(growable: false);
+    final activeAccountId = payload.activeAccountId!;
+    final defaultAccountId = payload.defaultAccountId!;
+
+    await _persistMultiAccountMetadata(
+      accounts: accounts,
+      activeAccountId: activeAccountId,
+      defaultAccountId: defaultAccountId,
+    );
+
+    final activeAccount = _resolveRequiredAccountById(
+      accounts: accounts,
+      accountId: activeAccountId,
+    );
+
+    return importedProfile.copyWith(
+      account: activeAccount,
+      accounts: _normalizeStoredAccountFlags(
+        accounts: accounts,
+        activeAccountId: activeAccountId,
+        defaultAccountId: defaultAccountId,
+      ),
+      activeAccountId: activeAccountId,
+      defaultAccountId: defaultAccountId,
+    );
+  }
+
+  void _validateBackupWalletAddress(
+    WalletBackupPayload payload,
+    String restoredAddress,
+  ) {
+    if (!_sameAddress(payload.wallet.address, restoredAddress)) {
+      throw Exception('Backup wallet address does not match restored key');
+    }
+  }
+
+  void _validateCurrentRuntimeBackupAccounts(WalletBackupPayload payload) {
+    if (payload.accounts.length != 1) {
+      throw Exception(
+        'Multi-account backup restore is not supported by this wallet version',
+      );
+    }
+
+    final account = payload.accounts.single;
+    if (!_sameAddress(account.address, payload.wallet.address)) {
+      throw Exception('Backup account does not match wallet address');
+    }
+
+    if (payload.activeAccountId != account.id ||
+        payload.defaultAccountId != account.id) {
+      throw Exception('Backup account selection is not compatible');
+    }
+  }
+
+  @override
   Future<String?> readMnemonic() {
     return secureStorage.read(StorageKeys.walletMnemonic);
   }
@@ -593,6 +708,27 @@ class WalletRepositoryImpl implements WalletRepository {
 
     final privateKeyHex = HEX.encode(privateKeyBytes);
     return EthPrivateKey.fromHex(privateKeyHex);
+  }
+
+  Future<String> _addressFromMnemonic(String mnemonic) async {
+    final credentials = _credentialsFromMnemonic(_normalizeMnemonic(mnemonic));
+    final address = await credentials.extractAddress();
+    return address.hexEip55;
+  }
+
+  Future<String> _addressFromPrivateKey(String privateKey) async {
+    final normalized = _normalizePrivateKey(privateKey);
+    if (!_isValidPrivateKey(normalized)) {
+      throw Exception('Private key invÃ¡lida');
+    }
+
+    final credentials = EthPrivateKey.fromHex(normalized);
+    final address = await credentials.extractAddress();
+    return address.hexEip55;
+  }
+
+  bool _sameAddress(String left, String right) {
+    return left.trim().toLowerCase() == right.trim().toLowerCase();
   }
 
   bool _isValidPrivateKey(String value) {
