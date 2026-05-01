@@ -90,15 +90,18 @@ jobs:
       - name: Rename Android artifacts
         shell: bash
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)\+[0-9]+/\1/')
+          VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)/\1+\2/')
           mkdir -p release-artifacts
-          cp build/app/outputs/bundle/release/app-release.aab "release-artifacts/scavium_wallet-${VERSION}-android.aab"
-          cp build/app/outputs/flutter-apk/app-release.apk "release-artifacts/scavium_wallet-${VERSION}-android.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "release-artifacts/scavium_wallet-${VERSION}-android-bundle.aab"
+          cp build/app/outputs/flutter-apk/app-release.apk "release-artifacts/scavium_wallet-${VERSION}-android-apk.apk"
+
+          test -f "release-artifacts/scavium_wallet-${VERSION}-android-bundle.aab"
+          test -f "release-artifacts/scavium_wallet-${VERSION}-android-apk.apk"
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: android-release-artifacts
+          name: scavium-wallet-android-release-artifacts
           path: release-artifacts/*
 
   build_windows_msix:
@@ -146,8 +149,8 @@ jobs:
         shell: pwsh
         run: |
           $pubspec = Get-Content pubspec.yaml -Raw
-          if ($pubspec -match 'version:\s*([0-9]+\.[0-9]+\.[0-9]+)\+\d+') {
-            $version = $matches[1]
+          if ($pubspec -match 'version:\s*([0-9]+\.[0-9]+\.[0-9]+)\+(\d+)') {
+            $version = "$($matches[1])+$($matches[2])"
           } else {
             Write-Error "Could not resolve semantic version from pubspec.yaml"
             exit 1
@@ -163,10 +166,15 @@ jobs:
 
           Copy-Item $msix.FullName "release-artifacts\scavium_wallet-$version-windows.msix"
 
+          if (-not (Test-Path "release-artifacts\scavium_wallet-$version-windows.msix")) {
+            Write-Error "Renamed Windows MSIX artifact not found"
+            exit 1
+          }
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-release-artifacts
+          name: scavium-wallet-windows-release-artifacts
           path: release-artifacts\*
 
   publish_release:
@@ -183,22 +191,23 @@ jobs:
       - name: Download Android artifacts
         uses: actions/download-artifact@v4
         with:
-          name: android-release-artifacts
+          name: scavium-wallet-android-release-artifacts
           path: release-assets/android
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          name: windows-release-artifacts
+          name: scavium-wallet-windows-release-artifacts
           path: release-assets/windows
 
       - name: Create SHA256 checksums
         shell: bash
         run: |
           cd release-assets
-          find . -type f -print0 | while IFS= read -r -d '' file; do
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | while IFS= read -r -d '' file; do
             sha256sum "$file" >> SHA256SUMS.txt
           done
+          test -s SHA256SUMS.txt
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
