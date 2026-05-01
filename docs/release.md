@@ -452,17 +452,17 @@ These checks complement existing release validation. They do not replace `fvm fl
 
 ---
 
-## 🚧 Phase 8.6 Release & Distribution Maturity Planning
+## 🚧 Phase 8.6 Release & Distribution Maturity
 
-Phase 8.6 is the next planned release/distribution maturity extension after Phase 8.5 closure. It starts from the existing Phase 7 release-hardening baseline and the current Phase 8.5 runtime-hardening state.
+Phase 8.6 is the active release/distribution maturity extension after Phase 8.5 closure. It starts from the existing Phase 7 release-hardening baseline and the current Phase 8.5 runtime-hardening state. Phase 8.6.0 is complete as the baseline inspection and execution contract.
 
-The real baseline already includes:
+The 8.6.0 baseline inspection confirmed that the real baseline already includes:
 
 - `tool/build.dart` for local build automation, version handling, platform selection, MSIX synchronization, CI overrides, artifact discovery, and local signing/verification behavior.
 - `.github/workflows/release.yml` for tag/manual release validation, Android release artifact generation, Windows MSIX generation, SHA256 checksum generation, artifact upload/download, and draft GitHub Release publication.
 - `pubspec.yaml` for semantic version/build-number ownership and MSIX metadata.
 
-Planned 8.6 maturity areas are:
+Remaining planned 8.6 maturity areas are:
 
 - build-tool artifact and version consistency;
 - GitHub Release workflow artifact consistency;
@@ -483,3 +483,5 @@ dart run tool/build.dart --platform windows-msix --no-version-bump
 ```
 
 CI validation must continue to confirm that Android artifacts, Windows MSIX artifacts, and SHA256 checksums are produced and attached to a draft GitHub Release through the existing workflow unless a later 8.6 implementation subphase explicitly changes that behavior.
+
+Phase 8.6.0 did not change release code, workflow code, `pubspec.yaml`, signing material, generated artifacts, or runtime wallet behavior. Its completed purpose is to lock the inspected baseline so 8.6.1 and later subphases can improve release artifact/version consistency, workflow artifact consistency, validation/reporting, metadata documentation, and closure readiness without replacing proven release ownership.

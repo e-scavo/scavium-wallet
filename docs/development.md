@@ -317,7 +317,7 @@ Those commands are the correct validation gate for the developer workstation or 
 
 ## Phase 8.6 Development Boundary
 
-Phase 8.6 is planned as a release and distribution maturity extension after Phase 8.5.
+Phase 8.6 is active as a release and distribution maturity extension after Phase 8.5. Phase 8.6.0 completed the baseline inspection and execution contract without modifying runtime code, release workflow source, or generated operational files.
 
 The phase is intentionally limited to release-tooling and distribution-documentation concerns:
 
@@ -350,4 +350,4 @@ dart run tool/build.dart --platform web --no-version-bump
 dart run tool/build.dart --platform windows-msix --no-version-bump
 ```
 
-Documentation-only subphases must not generate `.agent/*` files, must not modify runtime source, and must update only the Markdown files required to keep the documentation trunk coherent.
+Documentation-only subphases must not generate `.agent/*` files, must not modify runtime source, and must update only the Markdown files required to keep the documentation trunk coherent. Phase 8.6.0 followed this boundary and confirmed `tool/build.dart`, `.github/workflows/release.yml`, `pubspec.yaml`, and `docs/release.md` as the real release baseline owners for subsequent 8.6 implementation work.

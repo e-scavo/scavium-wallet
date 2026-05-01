@@ -182,9 +182,9 @@ The documentation trunk now reflects Phase 8.5 in `README.md`, this index, the P
 
 ---
 
-## Planned Phase 8.6 release and distribution maturity extension
+## Active Phase 8.6 release and distribution maturity extension
 
-Phase 8.6 is planned after Phase 8.5 closure and is documented as a release/distribution maturity phase, not a product-surface expansion phase.
+Phase 8.6 is active after Phase 8.5 closure and is documented as a release/distribution maturity phase, not a product-surface expansion phase. The 8.6.0 baseline inspection and execution contract is complete.
 
 The phase starts from the real existing release baseline:
 
@@ -193,9 +193,13 @@ The phase starts from the real existing release baseline:
 - `pubspec.yaml` owns the semantic version/build number and `msix_config` metadata used by packaging.
 - `docs/release.md` remains the trunk release/distribution reference.
 
-Planned Phase 8.6 scope:
+Phase 8.6 scope:
+
+Completed baseline work:
 
 - 8.6.0 — Release & Distribution Baseline Inspection and Execution Contract
+
+Planned implementation and closure work:
 - 8.6.1 — Build Tool Artifact and Version Consistency Maturity
 - 8.6.2 — GitHub Release Workflow Artifact Consistency
 - 8.6.3 — Release Validation and Operator Reporting
@@ -204,3 +208,5 @@ Planned Phase 8.6 scope:
 - 8.6.close — Release & Distribution Maturity Extension Closure
 
 Phase 8.6 must remain bounded. It does not introduce automatic Play Store upload, automatic Microsoft Store submission, iOS distribution, runtime update delivery, telemetry, analytics, backup format changes, or wallet runtime feature changes unless a later dedicated phase explicitly defines and validates that scope.
+
+The 8.6.0 baseline confirms that the next implementation subphases must extend the current release owners incrementally instead of replacing them: `tool/build.dart` for local builds and version/MSIX behavior, `.github/workflows/release.yml` for CI release packaging and draft publication, `pubspec.yaml` for version and MSIX metadata, and `docs/release.md` for operator-facing release documentation.
