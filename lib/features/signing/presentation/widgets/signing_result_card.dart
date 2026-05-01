@@ -25,6 +25,10 @@ class SigningResultCard extends StatelessWidget {
           const Text('Signature'),
           const SizedBox(height: 6),
           SelectableText(result.signature),
+          const SizedBox(height: 8),
+          const Text(
+            'Share this signature only with the service you intended to verify with. It is not a transaction receipt.',
+          ),
           const SizedBox(height: 12),
           const Text('Signed account'),
           const SizedBox(height: 6),

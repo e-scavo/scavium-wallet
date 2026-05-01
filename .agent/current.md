@@ -1,27 +1,30 @@
-# Current Task — 8.5.1
+# Current Task — 8.5.2
 
 Project: SCAVIUM Wallet
 Phase: 8.5 — Security, Reliability & Diagnostics Maturity
-Subphase: 8.5.1 — Sensitive Diagnostics Output Hardening
+Subphase: 8.5.2 — Signing Safety Copy and Confirmation Hardening
 Type: code
 
 ## Goal
 
-Harden RPC diagnostics and health output so troubleshooting remains useful without exposing wallet material, secrets, raw internal exceptions, or misleading security state.
+Strengthen message-signing safety copy, validation clarity, confirmation behavior, cancellation handling, and result display without changing Phase 8.3 signing architecture.
 
 ## Scope
 
-Keep diagnostics non-invasive. Preserve Settings reachability, active RPC/ping/cooldown visibility, and current blockchain ownership. Do not add telemetry, analytics, remote logging, or background reporting.
+Keep signing explicit and separate from transactions. Do not add dApp connectivity, WalletConnect, automatic challenge ingestion, transaction submission, or background signing.
 
 ## Allowed Files
 
-- `lib/features/blockchain/presentation/rpc_diagnostics_screen.dart`
-- `lib/features/blockchain/application/rpc_health_controller.dart`
-- `lib/features/blockchain/application/rpc_status_controller.dart`
-- `lib/features/blockchain/domain/scavium_rpc_status.dart`
-- `lib/core/errors/app_exception.dart`
-- `test/widget_test.dart`
-- `test/rpc_diagnostics_safety_test.dart`
+- `lib/features/signing/domain/signing_request.dart`
+- `lib/features/signing/application/signing_controller.dart`
+- `lib/features/signing/presentation/signing_screen.dart`
+- `lib/features/signing/presentation/widgets/signing_confirm_dialog.dart`
+- `lib/features/signing/presentation/widgets/signing_result_card.dart`
+- `lib/shared/widgets/feedback/app_snackbar.dart`
+- `test/signing_request_test.dart`
+- `test/signing_controller_test.dart`
+- `test/signing_screen_test.dart`
+- `test/signing_safety_copy_test.dart`
 
 ## Forbidden
 
@@ -34,19 +37,20 @@ Keep diagnostics non-invasive. Preserve Settings reachability, active RPC/ping/c
 
 ## Implementation Requirements
 
-- Read only the allowed diagnostics/error/test files before proposing edits.
-- Normalize user-facing diagnostics copy without including wallet addresses, private keys, mnemonic material, backup passwords, raw signed messages, signatures, or backup payload contents.
-- Prefer existing `AppException` and controller patterns.
-- Create `test/rpc_diagnostics_safety_test.dart` only if existing tests cannot hold focused safety assertions.
-- Keep changes small and limited to diagnostics safety.
+- Preserve signing service/controller/domain/presentation separation.
+- Keep active-account verification intact.
+- Improve warnings for personal message and challenge signing.
+- Make confirmation copy explicit that signing is not sending a transaction.
+- Keep cancellation non-mutating.
+- Create `test/signing_safety_copy_test.dart` only if existing signing tests become too broad.
 
 ## Validation (manual)
 
 ```bash
 fvm flutter analyze
-fvm flutter test test/widget_test.dart test/rpc_diagnostics_safety_test.dart
+fvm flutter test test/signing_request_test.dart test/signing_controller_test.dart test/signing_screen_test.dart
 ```
 
 ## Acceptance
 
-Diagnostics remain reachable from Settings, preserve useful RPC state, do not mutate wallet state, and do not expose sensitive wallet material.
+Signing still requires explicit preview/confirmation; cancellation does not mutate state; no transaction history entry is created; result copy is clear and safe.

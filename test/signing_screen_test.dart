@@ -27,6 +27,12 @@ void main() {
 
     expect(find.text('Signing is not a transaction'), findsOneWidget);
     expect(
+      find.textContaining('does not submit a transaction'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Never sign a message'), findsOneWidget);
+    expect(find.textContaining('Personal messages'), findsOneWidget);
+    expect(
       find.text('0x1111111111111111111111111111111111111111'),
       findsWidgets,
     );
@@ -35,19 +41,22 @@ void main() {
       find.byType(TextField),
       '  prove account ownership  ',
     );
-    await tester.tap(find.text('Preview and sign'));
+    await _tapPreviewAndSign(tester);
     await tester.pumpAndSettle();
 
     expect(find.text('Confirm signature'), findsOneWidget);
     expect(find.text('prove account ownership'), findsOneWidget);
+    expect(find.textContaining('does not send a transaction'), findsOneWidget);
+    expect(find.textContaining('recognize the full text'), findsOneWidget);
 
-    await tester.tap(find.text('Sign'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Sign'));
     await tester.pumpAndSettle();
 
     expect(signingService.personalCalls, 1);
     expect(signingService.challengeCalls, 0);
     expect(find.text('Signature result'), findsOneWidget);
     expect(find.text('0xsigned-personal'), findsOneWidget);
+    expect(find.textContaining('not a transaction receipt'), findsOneWidget);
     expect(find.text('Copy signature'), findsOneWidget);
   });
 
@@ -66,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'cancel this');
-    await tester.tap(find.text('Preview and sign'));
+    await _tapPreviewAndSign(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Cancel'));
@@ -76,6 +85,49 @@ void main() {
     expect(signingService.challengeCalls, 0);
     expect(find.text('Signature result'), findsNothing);
   });
+
+  testWidgets('shows challenge-specific safety copy', (tester) async {
+    final signingService = _FakeSigningService();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          walletControllerProvider.overrideWith(_FakeWalletController.new),
+          signingServiceProvider.overrideWithValue(signingService),
+        ],
+        child: const MaterialApp(home: SigningScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Challenge'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Challenges should come from'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'challenge-123');
+    await _tapPreviewAndSign(tester);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('came from the service you are intentionally'),
+      findsOneWidget,
+    );
+    expect(signingService.personalCalls, 0);
+    expect(signingService.challengeCalls, 0);
+  });
+}
+
+Future<void> _tapPreviewAndSign(WidgetTester tester) async {
+  final button = find.widgetWithText(FilledButton, 'Preview and sign');
+
+  await tester.scrollUntilVisible(
+    button,
+    120,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(button);
 }
 
 class _FakeWalletController extends WalletController {

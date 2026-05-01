@@ -110,7 +110,11 @@ class _SigningScreenState extends ConsumerState<SigningScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'A signature proves control of the active account. It does not submit a transaction or move funds.',
+                      'A signature proves control of the active account. It does not submit a transaction, move funds, or create transaction history.',
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Review the exact text before signing. Never sign a message that asks for your recovery phrase, private key, backup password, or unexpected permissions.',
                     ),
                     const SizedBox(height: 16),
                     const Text('Active account'),
@@ -142,6 +146,8 @@ class _SigningScreenState extends ConsumerState<SigningScreen> {
                         setState(() => _mode = selection.single);
                       },
                     ),
+                    const SizedBox(height: 16),
+                    _SigningModeWarning(mode: _mode),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _messageController,
@@ -184,6 +190,31 @@ class _SigningScreenState extends ConsumerState<SigningScreen> {
               subtitle: '$error',
             ),
       ),
+    );
+  }
+}
+
+class _SigningModeWarning extends StatelessWidget {
+  final SigningMode mode;
+
+  const _SigningModeWarning({required this.mode});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = switch (mode) {
+      SigningMode.personalMessage =>
+        'Personal messages are often used to prove account ownership. Only sign text you recognize and intend to share.',
+      SigningMode.challengeMessage =>
+        'Challenges should come from a trusted service and be reviewed exactly as shown before approval.',
+    };
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.warning_amber_outlined),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text)),
+      ],
     );
   }
 }

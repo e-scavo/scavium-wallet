@@ -33,6 +33,18 @@ void main() {
       );
     });
 
+    test('rejects messages over the safety limit', () {
+      expect(
+        () =>
+            SigningRequest(
+              mode: SigningMode.personalMessage,
+              message: 'a' * (SigningRequest.maxMessageLength + 1),
+              accountAddress: '0x1111111111111111111111111111111111111111',
+            ).normalized(),
+        throwsA(isA<AppException>()),
+      );
+    });
+
     test('rejects invalid account addresses', () {
       expect(
         () =>
