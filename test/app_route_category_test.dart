@@ -33,6 +33,10 @@ void main() {
         AppRouteCategory.action,
       );
       expect(
+        AppRouteClassifier.categoryFor(RouteNames.receive),
+        AppRouteCategory.action,
+      );
+      expect(
         AppRouteClassifier.categoryFor(RouteNames.signing),
         AppRouteCategory.action,
       );
@@ -44,8 +48,23 @@ void main() {
         AppRouteClassifier.categoryFor(RouteNames.transactionDetail),
         AppRouteCategory.detail,
       );
+      expect(
+        AppRouteClassifier.categoryFor(RouteNames.rpcDiagnostics),
+        AppRouteCategory.detail,
+      );
       expect(AppRouteClassifier.isPrimary(RouteNames.send), isFalse);
       expect(AppRouteClassifier.isPrimary(RouteNames.assetDetail), isFalse);
+      expect(AppRouteClassifier.isShellEligible(RouteNames.send), isFalse);
+      expect(AppRouteClassifier.isShellEligible(RouteNames.receive), isFalse);
+      expect(AppRouteClassifier.isShellEligible(RouteNames.signing), isFalse);
+      expect(
+        AppRouteClassifier.isShellEligible(RouteNames.rpcDiagnostics),
+        isFalse,
+      );
+      expect(
+        AppRouteClassifier.isShellEligible(RouteNames.transactionDetail),
+        isFalse,
+      );
     });
 
     test('treats unknown future routes as secondary but shell eligible', () {

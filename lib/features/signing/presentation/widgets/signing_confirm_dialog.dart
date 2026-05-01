@@ -30,8 +30,10 @@ class SigningConfirmDialog extends StatelessWidget {
           SelectableText(message),
           const SizedBox(height: 12),
           const Text(
-            'Signing does not send a transaction or move funds. Only approve messages you trust.',
+            'Signing does not send a transaction, move funds, or grant access to your recovery phrase or private keys.',
           ),
+          const SizedBox(height: 8),
+          Text(_confirmationWarning(mode)),
         ],
       ),
       actions: [
@@ -51,6 +53,15 @@ class SigningConfirmDialog extends StatelessWidget {
     return switch (mode) {
       SigningMode.personalMessage => 'Personal message',
       SigningMode.challengeMessage => 'Challenge message',
+    };
+  }
+
+  String _confirmationWarning(SigningMode mode) {
+    return switch (mode) {
+      SigningMode.personalMessage =>
+        'Approve this personal message only if you recognize the full text.',
+      SigningMode.challengeMessage =>
+        'Approve this challenge only if it came from the service you are intentionally verifying with.',
     };
   }
 }
