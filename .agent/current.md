@@ -1,27 +1,30 @@
-# Current Task — 8.5.3
+# Current Task — 8.5.4
 
 Project: SCAVIUM Wallet
 Phase: 8.5 — Security, Reliability & Diagnostics Maturity
-Subphase: 8.5.3 — Backup and Recovery Warning Reliability
+Subphase: 8.5.4 — Lock, Lifecycle, and Sensitive Surface Reliability
 Type: code
 
 ## Goal
 
-Improve backup and recovery warning reliability so export, restore, password, compatibility, and invalid-payload states are explicit and safe.
+Improve reliability around lifecycle locking, screenshot protection, and sensitive route behavior without moving security ownership into shell widgets.
 
 ## Scope
 
-Preserve backup encryption semantics and backup payload compatibility. Do not change payload format unless a real defect is found and reported before editing.
+Preserve GoRouter as routing owner and AppShell as navigation chrome only. Keep onboarding, wallet-entry, lock, detail, action, diagnostics, and shell route boundaries explicit.
 
 ## Allowed Files
 
-- `lib/features/settings/presentation/export_backup_screen.dart`
-- `lib/features/wallet/presentation/restore_backup_screen.dart`
-- `lib/features/wallet/application/wallet_backup_controller.dart`
-- `lib/features/wallet/domain/wallet_backup_payload.dart`
-- `lib/core/services/backup_crypto_service.dart`
-- `test/wallet_backup_payload_test.dart`
-- `test/backup_recovery_warning_test.dart`
+- `lib/core/security/app_lifecycle_guard.dart`
+- `lib/core/security/lock_policy.dart`
+- `lib/core/security/screenshot_guard.dart`
+- `lib/app/router/app_route_category.dart`
+- `lib/app/router/app_router.dart`
+- `lib/app/shell/app_shell.dart`
+- `test/app_route_category_test.dart`
+- `test/app_shell_test.dart`
+- `test/app_lifecycle_guard_test.dart`
+- `test/sensitive_route_guard_test.dart`
 
 ## Forbidden
 
@@ -34,19 +37,19 @@ Preserve backup encryption semantics and backup payload compatibility. Do not ch
 
 ## Implementation Requirements
 
-- Improve export and restore warning copy without weakening existing password gating.
-- Normalize unsafe or confusing backup/restore errors only inside existing ownership boundaries.
-- Preserve v1/v2 and multi-account compatibility semantics.
-- Do not expose password, key, mnemonic, encrypted payload, or raw backup content in UI/errors.
-- Create `test/backup_recovery_warning_test.dart` only if existing tests cannot cover the focused warning behavior.
+- Review lifecycle lock/refresh ordering and harden only if needed.
+- Keep lock-aware redirects centralized in `app_router.dart`.
+- Harden screenshot guard platform/failure handling only if current behavior can affect runtime stability.
+- Update route categories only if sensitive route classification requires it.
+- Create lifecycle/route guard tests only if existing tests cannot cover the change.
 
 ## Validation (manual)
 
 ```bash
 fvm flutter analyze
-fvm flutter test test/wallet_backup_payload_test.dart test/backup_recovery_warning_test.dart
+fvm flutter test test/app_route_category_test.dart test/app_shell_test.dart test/widget_test.dart
 ```
 
 ## Acceptance
 
-Backup export remains password-gated; restore remains explicit; invalid payloads fail safely; compatibility remains intact; no secret material appears in messages.
+Lock-aware routing remains centralized; shell remains presentation-only; sensitive routes stay explicit; lifecycle/screenshot failures fail safely.
