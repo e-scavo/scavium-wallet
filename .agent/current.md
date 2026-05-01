@@ -1,31 +1,30 @@
-# Current Task — 8.4.2
+# Current Task — 8.4.3
 
 Project: SCAVIUM Wallet
 Phase: 8.4 — UX & Product Surface Maturity
-Subphase: 8.4.2 — Responsive App Shell Foundation
+Subphase: 8.4.3 — Dashboard and Product Surface Segmentation
 Type: code
 
 ## Goal
 
-Introduce a reusable responsive authenticated product shell for primary wallet destinations without moving feature state into shell code.
+Reduce Home overload by making Home a summary dashboard while product surfaces own detailed workflows.
 
 ## Scope
 
-Add shell structure for Home, Assets, Activity/History, Settings, and any route inventory from 8.4.1. Keep public, lock, detail, and action routes safe.
+Keep balance/account/network summary and recent activity preview on Home. Avoid duplicating shell navigation. Preserve intentional quick actions for send, receive, signing, and explorer flows.
 
 ## Allowed Files
 
-- `lib/shared/widgets/scavium_scaffold.dart`
-- `lib/app/router/app_router.dart`
-- `lib/app/router/route_names.dart`
 - `lib/features/home/presentation/home_screen.dart`
+- `lib/features/wallet/presentation/account_switcher.dart`
 - `lib/features/assets/presentation/assets_screen.dart`
 - `lib/features/assets/presentation/history_screen.dart`
-- `lib/features/settings/presentation/settings_screen.dart`
-- `lib/app/shell/app_shell.dart`
-- `lib/app/shell/app_shell_destination.dart`
-- `lib/app/shell/responsive_navigation.dart`
-- `test/app_shell_test.dart`
+- `lib/features/assets/presentation/transaction_detail_screen.dart`
+- `test/portfolio_summary_test.dart`
+- `test/transaction_detail_screen_test.dart`
+- `lib/features/home/presentation/widgets/dashboard_balance_card.dart`
+- `lib/features/home/presentation/widgets/dashboard_recent_activity_card.dart`
+- `test/home_screen_test.dart`
 
 ## Forbidden
 
@@ -38,20 +37,19 @@ Add shell structure for Home, Assets, Activity/History, Settings, and any route 
 
 ## Implementation Requirements
 
-- Build a shell only around authenticated primary destinations.
-- Use responsive navigation suitable for compact and wide layouts.
-- Keep Riverpod controllers in feature modules.
-- Do not introduce route loops.
-- Preserve `ScaviumScaffold` compatibility for secondary/action screens.
-- Create shell files only if needed by real implementation.
+- Keep Home as summary, not a replacement for Assets/Activity/Settings.
+- Preserve account switching unless 8.4.4 moves it deliberately.
+- Recent activity preview must be read-only and open details intentionally.
+- Do not duplicate feature state in Home-specific controllers.
+- Extract widgets only if Home becomes too large.
 
 ## Validation (manual)
 
 ```bash
 fvm flutter analyze
-fvm flutter test test/app_shell_test.dart test/widget_test.dart
+fvm flutter test test/portfolio_summary_test.dart test/transaction_detail_screen_test.dart
 ```
 
 ## Acceptance
 
-Primary destinations render through shell; public/onboarding/lock routes stay outside; no feature state is owned by shell.
+Home is usable on compact and wide layouts; feature routes remain reachable; no feature ownership moved into Home.
