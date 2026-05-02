@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:scavium_wallet/app/theme/app_colors.dart';
@@ -79,6 +80,8 @@ void main() {
     test('builds dark theme from normalized token values', () {
       final theme = AppTheme.darkTheme;
 
+      expect(theme.brightness, Brightness.dark);
+      expect(theme.colorScheme.brightness, Brightness.dark);
       expect(theme.scaffoldBackgroundColor, ScavoColors.backgroundCanvas);
       expect(theme.colorScheme.primary, ScavoColors.actionPrimary);
       expect(theme.colorScheme.surface, ScavoColors.backgroundLayer);
@@ -88,6 +91,31 @@ void main() {
       expect(theme.inputDecorationTheme.fillColor, ScavoColors.surfaceRaised);
       expect(theme.snackBarTheme.backgroundColor, ScavoColors.surfaceRaised);
       expect(theme.dialogTheme.backgroundColor, ScavoColors.surfaceBase);
+    });
+
+    test('builds light theme from light token values', () {
+      final theme = AppTheme.lightTheme;
+
+      expect(theme.brightness, Brightness.light);
+      expect(theme.colorScheme.brightness, Brightness.light);
+      expect(theme.scaffoldBackgroundColor, ScavoThemeColors.light.canvas);
+      expect(theme.colorScheme.primary, ScavoThemeColors.light.actionPrimary);
+      expect(theme.colorScheme.surface, ScavoThemeColors.light.layer);
+      expect(theme.colorScheme.error, ScavoThemeColors.light.danger);
+      expect(theme.cardTheme.color, ScavoThemeColors.light.surfaceBase);
+      expect(theme.cardTheme.elevation, ScavoElevation.surface);
+      expect(
+        theme.inputDecorationTheme.fillColor,
+        ScavoThemeColors.light.surfaceRaised,
+      );
+      expect(
+        theme.snackBarTheme.backgroundColor,
+        ScavoThemeColors.light.surfaceRaised,
+      );
+      expect(
+        theme.dialogTheme.backgroundColor,
+        ScavoThemeColors.light.surfaceBase,
+      );
     });
   });
 }

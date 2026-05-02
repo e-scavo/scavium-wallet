@@ -2,104 +2,131 @@ import 'package:flutter/material.dart';
 import 'package:scavium_wallet/app/theme/tokens/scavo_tokens.dart';
 
 abstract final class AppTheme {
-  static ThemeData get darkTheme {
-    final base = ThemeData.dark(useMaterial3: true);
+  static ThemeData get darkTheme => _buildTheme(ScavoThemeColors.dark);
+
+  static ThemeData get lightTheme => _buildTheme(ScavoThemeColors.light);
+
+  static ThemeData _buildTheme(ScavoThemeColors colors) {
+    final isDark = colors.brightness == Brightness.dark;
+    final base =
+        isDark
+            ? ThemeData.dark(useMaterial3: true)
+            : ThemeData.light(useMaterial3: true);
+
+    final textTheme = _textTheme(colors);
 
     return base.copyWith(
-      scaffoldBackgroundColor: ScavoColors.backgroundCanvas,
-      colorScheme: const ColorScheme.dark(
-        primary: ScavoColors.actionPrimary,
-        secondary: ScavoColors.actionSecondary,
-        surface: ScavoColors.backgroundLayer,
-        error: ScavoColors.semanticDanger,
-        onPrimary: ScavoColors.textOnAction,
-        onSurface: ScavoColors.textPrimary,
+      brightness: colors.brightness,
+      scaffoldBackgroundColor: colors.canvas,
+      colorScheme: ColorScheme(
+        brightness: colors.brightness,
+        primary: colors.actionPrimary,
+        onPrimary: colors.textOnAction,
+        secondary: colors.actionSecondary,
+        onSecondary: colors.textOnAction,
+        error: colors.danger,
+        onError: colors.textOnAction,
+        surface: colors.layer,
+        onSurface: colors.textPrimary,
       ),
-      textTheme: TextTheme(
-        displayLarge: ScavoTypography.display,
-        headlineLarge: ScavoTypography.title,
-        headlineMedium: ScavoTypography.subtitle,
-        bodyLarge: ScavoTypography.body,
-        bodyMedium: ScavoTypography.bodyMuted,
-        labelLarge: ScavoTypography.button,
-      ),
-      appBarTheme: const AppBarTheme(
+      textTheme: textTheme,
+      appBarTheme: AppBarTheme(
         backgroundColor: ScavoColors.transparent,
         elevation: ScavoElevation.surface,
         surfaceTintColor: ScavoColors.transparent,
         centerTitle: false,
+        foregroundColor: colors.textPrimary,
+        titleTextStyle: textTheme.headlineMedium,
       ),
       cardTheme: CardThemeData(
-        color: ScavoColors.surfaceBase,
+        color: colors.surfaceBase,
         elevation: ScavoElevation.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ScavoRadius.container),
-          side: const BorderSide(color: ScavoColors.borderDefault),
+          side: BorderSide(color: colors.border),
         ),
       ),
-      dividerTheme: const DividerThemeData(
-        color: ScavoColors.dividerDefault,
+      dividerTheme: DividerThemeData(
+        color: colors.divider,
         thickness: 1,
         space: ScavoSpacing.standard,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: ScavoColors.actionPrimary,
-          foregroundColor: ScavoColors.textOnAction,
-          disabledBackgroundColor: ScavoColors.actionDisabled,
-          disabledForegroundColor: ScavoColors.textSecondary,
+          backgroundColor: colors.actionPrimary,
+          foregroundColor: colors.textOnAction,
+          disabledBackgroundColor: colors.actionDisabled,
+          disabledForegroundColor: colors.textSecondary,
           elevation: ScavoElevation.interactive,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(ScavoRadius.interactive),
           ),
-          textStyle: ScavoTypography.actionLabel,
+          textStyle: textTheme.labelLarge,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: ScavoColors.textOnAction,
-          disabledForegroundColor: ScavoColors.textDisabled,
-          side: const BorderSide(color: ScavoColors.borderDefault),
+          foregroundColor: colors.actionPrimary,
+          disabledForegroundColor: colors.textDisabled,
+          side: BorderSide(color: colors.border),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(ScavoRadius.interactive),
           ),
-          textStyle: ScavoTypography.actionLabel,
+          textStyle: textTheme.labelLarge,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: ScavoColors.surfaceRaised,
+        fillColor: colors.surfaceRaised,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ScavoRadius.interactive),
-          borderSide: const BorderSide(color: ScavoColors.borderDefault),
+          borderSide: BorderSide(color: colors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ScavoRadius.interactive),
-          borderSide: const BorderSide(color: ScavoColors.borderDefault),
+          borderSide: BorderSide(color: colors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ScavoRadius.interactive),
-          borderSide: const BorderSide(color: ScavoColors.focusRing),
+          borderSide: BorderSide(color: colors.focusRing),
         ),
-        labelStyle: ScavoTypography.label,
-        hintStyle: ScavoTypography.bodySecondary,
+        labelStyle: textTheme.labelMedium,
+        hintStyle: textTheme.bodyMedium,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: ScavoColors.surfaceRaised,
-        contentTextStyle: ScavoTypography.body,
+        backgroundColor: colors.surfaceRaised,
+        contentTextStyle: textTheme.bodyLarge,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ScavoRadius.sm),
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: ScavoColors.surfaceBase,
+        backgroundColor: colors.surfaceBase,
         elevation: ScavoElevation.modal,
-        titleTextStyle: ScavoTypography.subhead,
-        contentTextStyle: ScavoTypography.bodySecondary,
+        titleTextStyle: textTheme.headlineMedium,
+        contentTextStyle: textTheme.bodyMedium,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ScavoRadius.overlay),
         ),
+      ),
+    );
+  }
+
+  static TextTheme _textTheme(ScavoThemeColors colors) {
+    return TextTheme(
+      displayLarge: ScavoTypography.display.copyWith(color: colors.textPrimary),
+      headlineLarge: ScavoTypography.title.copyWith(color: colors.textPrimary),
+      headlineMedium: ScavoTypography.subtitle.copyWith(
+        color: colors.textPrimary,
+      ),
+      bodyLarge: ScavoTypography.body.copyWith(color: colors.textPrimary),
+      bodyMedium: ScavoTypography.bodySecondary.copyWith(
+        color: colors.textSecondary,
+      ),
+      labelMedium: ScavoTypography.label.copyWith(color: colors.textSecondary),
+      labelLarge: ScavoTypography.actionLabel.copyWith(
+        color: colors.textOnAction,
       ),
     );
   }
