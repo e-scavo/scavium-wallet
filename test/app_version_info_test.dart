@@ -32,5 +32,20 @@ void main() {
 
       expect(info.displayLabel, 'SCAVIUM Wallet 0.2.2 (1)');
     });
+
+    test(
+      'keeps semantic version and build number as separate display parts',
+      () {
+        const info = AppVersionInfo(
+          appName: 'SCAVIUM Wallet',
+          semanticVersion: '0.2.2',
+          buildNumber: '1',
+        );
+
+        expect(info.semanticVersion, '0.2.2');
+        expect(info.buildNumber, '1');
+        expect(info.displayLabel, isNot(contains('+')));
+      },
+    );
   });
 }

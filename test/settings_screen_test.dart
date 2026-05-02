@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,5 +44,52 @@ void main() {
     expect(find.text('SCAVIUM Wallet'), findsOneWidget);
     expect(find.text('SCAVIUM Wallet 0.2.2 (1)'), findsOneWidget);
     expect(find.text('Version 0.4.0'), findsNothing);
+  });
+
+  testWidgets('renders deterministic fallback while version is loading', (
+    tester,
+  ) async {
+    final pendingVersion = Completer<AppVersionInfo>();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appVersionInfoProvider.overrideWith((ref) => pendingVersion.future),
+        ],
+        child: const MaterialApp(home: SettingsScreen()),
+      ),
+    );
+
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pump();
+
+    expect(find.text('About'), findsOneWidget);
+    expect(find.text('SCAVIUM Wallet'), findsOneWidget);
+    expect(find.text('Version unavailable'), findsOneWidget);
+    expect(find.text('Version 0.4.0'), findsNothing);
+  });
+
+  testWidgets('renders version from provider override only', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appVersionInfoProvider.overrideWith(
+            (ref) async => const AppVersionInfo(
+              appName: 'SCAVIUM Wallet',
+              semanticVersion: '7.8.9',
+              buildNumber: '42',
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: SettingsScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+
+    expect(find.text('SCAVIUM Wallet 7.8.9 (42)'), findsOneWidget);
+    expect(find.text('SCAVIUM Wallet 0.2.2 (1)'), findsNothing);
   });
 }

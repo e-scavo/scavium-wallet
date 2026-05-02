@@ -1,27 +1,28 @@
-# Current Task — 9.1.2
+# Current Task — 9.1.3
 
 Project: SCAVIUM Wallet
 Phase: 9.1 — Runtime App Version Surface
-Subphase: 9.1.2 — Settings/About Runtime Version Integration
+Subphase: 9.1.3 — Runtime Version Surface Test Coverage
 Type: Code-only implementation
 
 ## Goal
 
-Replace the hardcoded About version text in Settings with data from the runtime app identity/version boundary.
+Add focused tests proving that the Settings/About version surface is dynamic, deterministic under test, and not dependent on local runtime package metadata.
 
 ## Scope
 
-- Convert the About tile from static copy to provider-backed version display.
-- Preserve existing Settings sections and visual structure.
-- Keep fallback behavior quiet and product-safe.
-- Do not redesign Settings or introduce theme controls.
+- Extend Settings widget coverage with provider overrides or mocks.
+- Add focused AppVersionInfo formatting coverage if a value object exists.
+- Avoid assertions that depend on machine-local build artifacts.
+- Keep tests scoped and low-noise.
 
 ## Allowed Files
 
-- `lib/features/settings/presentation/settings_screen.dart`
+- `test/settings_screen_test.dart`
+- `test/app_version_info_test.dart`
 - `lib/core/app_identity/app_version_info.dart`
 - `lib/core/app_identity/app_version_provider.dart`
-- `test/settings_screen_test.dart`
+- `lib/features/settings/presentation/settings_screen.dart`
 
 ## Forbidden
 
@@ -31,23 +32,22 @@ Replace the hardcoded About version text in Settings with data from the runtime 
 
 ## Implementation Requirements
 
-- Read the allowed files and current Settings test before planning.
-- Remove the stale literal `Version 0.4.0` from Settings runtime UI.
-- Use the provider boundary from 9.1.1.
-- Preserve `SCAVIUM Wallet` About title and existing section order.
-- If async metadata is used, render a safe deterministic fallback until metadata resolves.
-- Do not modify documentation or unrelated features.
+- Read only the allowed files before planning.
+- Prefer a provider override with a fixed test value such as `0.2.2+1`.
+- Validate display-label formatting without depending on `PackageInfo.fromPlatform()` in widget tests.
+- Keep existing Settings section assertions.
+- Do not add broad golden tests or unrelated widget coverage.
 
 ## Validation (manual)
 
 ```bash
-fvm flutter test test/settings_screen_test.dart
+fvm flutter test test/settings_screen_test.dart test/app_version_info_test.dart
 fvm flutter analyze
 ```
 
 ## Acceptance
 
-- About still renders `SCAVIUM Wallet`.
-- The hardcoded stale version literal is removed from Settings UI code.
-- Displayed version comes from the app identity/version boundary.
-- Existing Settings behavior remains intact.
+- Tests prove the About section renders deterministic dynamic version text.
+- Tests do not rely on platform package metadata.
+- Existing Settings tests continue to cover the organized sections.
+- No unrelated tests or documentation are modified.
