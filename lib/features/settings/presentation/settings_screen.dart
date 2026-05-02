@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scavium_wallet/app/router/route_names.dart';
+import 'package:scavium_wallet/core/app_identity/app_version_provider.dart';
 import 'package:scavium_wallet/features/assets/data/token_registry_repository_impl.dart';
 import 'package:scavium_wallet/features/assets/data/tx_history_repository_impl.dart';
 import 'package:scavium_wallet/features/settings/presentation/export_backup_screen.dart';
@@ -16,6 +17,12 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final appVersionState = ref.watch(appVersionInfoProvider);
+    final appVersionLabel = appVersionState.maybeWhen(
+      data: (version) => version.displayLabel,
+      orElse: () => 'Version unavailable',
+    );
+
     return ScaviumScaffold(
       appBar: AppBar(title: const Text('Settings')),
       child: ListView(
@@ -122,14 +129,14 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const SettingsSectionCard(
+          SettingsSectionCard(
             title: 'About',
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.info_outline),
-                title: Text('SCAVIUM Wallet'),
-                subtitle: Text('Version 0.4.0'),
+                leading: const Icon(Icons.info_outline),
+                title: const Text('SCAVIUM Wallet'),
+                subtitle: Text(appVersionLabel),
               ),
             ],
           ),

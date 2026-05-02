@@ -1,27 +1,27 @@
-# Current Task — 9.1.1
+# Current Task — 9.1.2
 
 Project: SCAVIUM Wallet
 Phase: 9.1 — Runtime App Version Surface
-Subphase: 9.1.1 — Runtime Version Metadata Boundary
+Subphase: 9.1.2 — Settings/About Runtime Version Integration
 Type: Code-only implementation
 
 ## Goal
 
-Introduce a minimal runtime app identity/version boundary that can expose app name, semantic version, build number, and display label without coupling Settings UI directly to platform/package APIs.
+Replace the hardcoded About version text in Settings with data from the runtime app identity/version boundary.
 
 ## Scope
 
-- Add runtime metadata support only if needed by the selected strategy.
-- Create the smallest app identity boundary under `lib/core/app_identity/`.
-- Centralize version display formatting.
-- Do not change Settings UI yet beyond what is required for compile safety.
+- Convert the About tile from static copy to provider-backed version display.
+- Preserve existing Settings sections and visual structure.
+- Keep fallback behavior quiet and product-safe.
+- Do not redesign Settings or introduce theme controls.
 
 ## Allowed Files
 
-- `pubspec.yaml`
-- `pubspec.lock`
+- `lib/features/settings/presentation/settings_screen.dart`
 - `lib/core/app_identity/app_version_info.dart`
 - `lib/core/app_identity/app_version_provider.dart`
+- `test/settings_screen_test.dart`
 
 ## Forbidden
 
@@ -31,24 +31,23 @@ Introduce a minimal runtime app identity/version boundary that can expose app na
 
 ## Implementation Requirements
 
-- Inspect only the allowed files before planning.
-- If using `package_info_plus`, add it to `pubspec.yaml` but do not run `flutter pub get`; tell the user to run it.
-- Implement a small `AppVersionInfo` value object with a stable display label.
-- Implement a Riverpod provider/service boundary that Settings can override in tests.
-- Keep names and structure aligned with existing `lib/core` and Riverpod patterns.
-- Do not edit docs, release tooling, theme files, routing, wallet, assets, signing, backup, or diagnostics code.
+- Read the allowed files and current Settings test before planning.
+- Remove the stale literal `Version 0.4.0` from Settings runtime UI.
+- Use the provider boundary from 9.1.1.
+- Preserve `SCAVIUM Wallet` About title and existing section order.
+- If async metadata is used, render a safe deterministic fallback until metadata resolves.
+- Do not modify documentation or unrelated features.
 
 ## Validation (manual)
 
 ```bash
-fvm flutter pub get
+fvm flutter test test/settings_screen_test.dart
 fvm flutter analyze
-fvm flutter test test/app_version_info_test.dart
 ```
 
 ## Acceptance
 
-- App identity/version boundary exists.
-- Display formatting is centralized.
-- Settings does not directly depend on package/platform APIs.
-- No unrelated code or documentation is modified.
+- About still renders `SCAVIUM Wallet`.
+- The hardcoded stale version literal is removed from Settings UI code.
+- Displayed version comes from the app identity/version boundary.
+- Existing Settings behavior remains intact.
