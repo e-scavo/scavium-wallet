@@ -75,6 +75,43 @@ abstract final class AppTheme {
           textStyle: textTheme.labelLarge,
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: colors.actionPrimary,
+          disabledForegroundColor: colors.textDisabled,
+          textStyle: textTheme.labelMedium,
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: colors.surfaceBase,
+        indicatorColor: colors.surfaceRaised,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final color =
+              states.contains(WidgetState.selected)
+                  ? colors.actionPrimary
+                  : colors.textSecondary;
+
+          return textTheme.labelMedium?.copyWith(color: color);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final color =
+              states.contains(WidgetState.selected)
+                  ? colors.actionPrimary
+                  : colors.textSecondary;
+
+          return IconThemeData(color: color);
+        }),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: colors.surfaceBase,
+        selectedIconTheme: IconThemeData(color: colors.actionPrimary),
+        unselectedIconTheme: IconThemeData(color: colors.textSecondary),
+        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          color: colors.actionPrimary,
+        ),
+        unselectedLabelTextStyle: textTheme.labelMedium,
+        indicatorColor: colors.surfaceRaised,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surfaceRaised,
@@ -109,6 +146,11 @@ abstract final class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ScavoRadius.overlay),
         ),
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: colors.focusRing,
+        selectionColor: colors.actionPrimary.withValues(alpha: 0.28),
+        selectionHandleColor: colors.actionPrimary,
       ),
     );
   }

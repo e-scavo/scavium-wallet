@@ -91,6 +91,15 @@ void main() {
       expect(theme.inputDecorationTheme.fillColor, ScavoColors.surfaceRaised);
       expect(theme.snackBarTheme.backgroundColor, ScavoColors.surfaceRaised);
       expect(theme.dialogTheme.backgroundColor, ScavoColors.surfaceBase);
+      expect(theme.navigationBarTheme.backgroundColor, ScavoColors.surfaceBase);
+      expect(
+        theme.navigationRailTheme.backgroundColor,
+        ScavoColors.surfaceBase,
+      );
+      expect(
+        theme.textButtonTheme.style?.foregroundColor?.resolve({}),
+        ScavoColors.actionPrimary,
+      );
     });
 
     test('builds light theme from light token values', () {
@@ -115,6 +124,18 @@ void main() {
       expect(
         theme.dialogTheme.backgroundColor,
         ScavoThemeColors.light.surfaceBase,
+      );
+      expect(
+        theme.navigationBarTheme.backgroundColor,
+        ScavoThemeColors.light.surfaceBase,
+      );
+      expect(
+        theme.navigationRailTheme.backgroundColor,
+        ScavoThemeColors.light.surfaceBase,
+      );
+      expect(
+        theme.textButtonTheme.style?.foregroundColor?.resolve({}),
+        ScavoThemeColors.light.actionPrimary,
       );
     });
   });

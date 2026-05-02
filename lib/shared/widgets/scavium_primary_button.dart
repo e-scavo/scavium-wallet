@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:scavium_wallet/app/theme/app_text_styles.dart';
 import 'package:scavium_wallet/app/theme/tokens/scavo_tokens.dart';
 
 class ScaviumPrimaryButton extends StatelessWidget {
@@ -28,7 +27,7 @@ class ScaviumPrimaryButton extends StatelessWidget {
                   height: ScavoSpacing.lg - ScavoSpacing.xxs / 2,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-                : Text(text, style: AppTextStyles.button),
+                : Text(text),
       ),
     );
   }

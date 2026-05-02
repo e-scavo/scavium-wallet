@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scavium_wallet/app/theme/tokens/scavo_tokens.dart';
 import 'package:scavium_wallet/shared/widgets/scavium_card.dart';
 
 class SettingsSectionCard extends StatelessWidget {
@@ -28,7 +29,7 @@ class SettingsSectionCard extends StatelessWidget {
             ),
           ),
           if (subtitle != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: ScavoSpacing.xxs),
             Text(
               subtitle!,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -36,7 +37,7 @@ class SettingsSectionCard extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: ScavoSpacing.sm),
           ..._withDividers(children),
         ],
       ),
@@ -50,7 +51,7 @@ class SettingsSectionCard extends StatelessWidget {
 
     return [
       for (var index = 0; index < items.length; index++) ...[
-        if (index > 0) const Divider(height: 1),
+        if (index > 0) const Divider(height: ScavoSpacing.xxs / 4),
         items[index],
       ],
     ];
