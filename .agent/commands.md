@@ -19,7 +19,7 @@ fvm flutter analyze
 ## Scoped Test
 
 ```bash
-fvm flutter test test/settings_screen_test.dart test/app_version_info_test.dart
+fvm flutter test test/build_tool_version_test.dart
 ```
 
 ---
@@ -27,7 +27,7 @@ fvm flutter test test/settings_screen_test.dart test/app_version_info_test.dart
 ## Optional Format
 
 ```bash
-dart format lib/core/app_identity/app_version_info.dart lib/core/app_identity/app_version_provider.dart lib/features/settings/presentation/settings_screen.dart test/settings_screen_test.dart test/app_version_info_test.dart
+dart format tool/build.dart test/build_tool_version_test.dart
 ```
 
 ---
@@ -43,7 +43,8 @@ fvm flutter test
 ## Fallback
 
 ```bash
-fvm flutter test test/settings_screen_test.dart
+dart run tool/build.dart --check-version --expected-tag v0.2.2
+fvm flutter test test/build_tool_version_test.dart
 fvm flutter analyze
 ```
 
@@ -54,14 +55,14 @@ fvm flutter analyze
 ```bash
 git checkout main
 git pull
-git checkout -b phase-9.1-runtime-app-version-surface
+git checkout -b phase-9.2-build-version-msix-sync-hardening
 
 git status
 git add <modified-files>
-git commit -m "phase 9.1 runtime app version surface"
+git commit -m "phase 9.2 build version msix synchronization hardening"
 
 git checkout main
 git pull
-git merge phase-9.1-runtime-app-version-surface
-git branch -d phase-9.1-runtime-app-version-surface
+git merge phase-9.2-build-version-msix-sync-hardening
+git branch -d phase-9.2-build-version-msix-sync-hardening
 ```
