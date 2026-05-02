@@ -338,9 +338,9 @@ Introduce the smallest stable runtime identity boundary capable of resolving the
 
 #### State
 
-New planned nested implementation subphase.
+Completed documentation alignment subphase from the real 9.2.2-to-9.2.3 implementation ZIP. This step records the implemented build-tool behavior, the focused validation surface, the operator/developer command contract, and the remaining closure check for the physical `pubspec.yaml` MSIX metadata layout.
 
-#### Existing Files Tentatively Intervenable
+#### Existing Files Intervened
 
 - `pubspec.yaml` — required only if the implementation uses a package such as `package_info_plus` to resolve runtime metadata across Flutter targets.
 - `pubspec.lock` — updated automatically only if a dependency is added through `flutter pub get`.
@@ -378,9 +378,9 @@ Replace the hardcoded About version text in Settings with data from the runtime 
 
 #### State
 
-New planned nested implementation subphase.
+Completed documentation alignment subphase from the real 9.2.2-to-9.2.3 implementation ZIP. This step records the implemented build-tool behavior, the focused validation surface, the operator/developer command contract, and the remaining closure check for the physical `pubspec.yaml` MSIX metadata layout.
 
-#### Existing Files Tentatively Intervenable
+#### Existing Files Intervened
 
 - `lib/features/settings/presentation/settings_screen.dart` — replace `Version 0.4.0` with runtime identity display while preserving the existing Settings sections.
 - `test/settings_screen_test.dart` — keep existing Settings section assertions valid after the About tile becomes dynamic.
@@ -417,9 +417,9 @@ Add focused tests that prove the About surface remains stable while the version 
 
 #### State
 
-New planned nested implementation subphase.
+Completed documentation alignment subphase from the real 9.2.2-to-9.2.3 implementation ZIP. This step records the implemented build-tool behavior, the focused validation surface, the operator/developer command contract, and the remaining closure check for the physical `pubspec.yaml` MSIX metadata layout.
 
-#### Existing Files Tentatively Intervenable
+#### Existing Files Intervened
 
 - `test/settings_screen_test.dart` — extend the existing Settings coverage to assert dynamic About behavior under a deterministic test value.
 - `pubspec.yaml` — only if test support requires a metadata package already introduced by 9.1.1.
@@ -561,11 +561,11 @@ Clarify and harden the relationship between `pubspec.yaml`, build-number mutatio
 
 ### State
 
-Active implementation subphase. 9.2.1 is complete as the baseline inspection and contract lock; 9.2.2 remains the next executable implementation step.
+Active implementation subphase. 9.2.1 completed the baseline inspection and contract lock. The real 9.2.2 and 9.2.3 agent execution added build-tool hardening and focused validation coverage; 9.2.4 is now executed as the release/development documentation alignment step before 9.2 closure.
 
-The real Phase 9.2.1 ZIP confirms that 9.2 is not yet implemented in code beyond the existing Phase 8.6 release-tooling baseline. `tool/build.dart` already owns version parsing, build-number mutation, tag validation, Windows MSIX version synchronization, CI MSIX overrides, artifact expectation reporting, and release-report generation. `pubspec.yaml` currently owns `version: 0.2.2+1` and `msix_config.msix_version: 0.2.2.1`. No build-tool unit test or validation helper currently exists under `test/`, and 9.1 did not modify build tooling, CI release workflow, MSIX metadata, artifact naming, or release publication behavior.
+The real Phase 9.2.2-to-9.2.3 ZIP confirms that 9.2 has now moved beyond the Phase 8.6 release-tooling baseline. `tool/build.dart` remains the build identity executor and now exposes testable version/MSIX helpers without invoking platform builds. `test/build_tool_version_test.dart` adds focused coverage for strict pubspec parsing, Git tag normalization, version bumping, `--no-version-bump`, and MSIX version derivation. `pubspec.yaml` still owns `version: 0.2.2+1` and `msix_config.msix_version: 0.2.2.1`; however, static ZIP inspection found the `identity_name` and `msix_version` entries serialized on the same physical line by an embedded carriage return. That must be treated as a closure blocker for 9.2.close because the intended metadata contract is correct but the committed YAML layout is not yet cleanly auditable.
 
-The 9.2.1 inspection locks the baseline contract before code hardening: `pubspec.yaml` is the canonical source of semantic version and build number; `tool/build.dart` is the canonical executor for local/CI build orchestration, tag validation, version mutation, and MSIX synchronization; `.github/workflows/release.yml` remains outside the default 9.2 scope unless a later implementation subphase proves a real CI inconsistency; generated build reports and release manifests remain generated evidence, not source-controlled documentation.
+The 9.2.1 inspection locked the baseline contract before code hardening. The 9.2.2 and 9.2.3 implementation keeps that ownership model: `pubspec.yaml` remains the canonical source of semantic version and build number; `tool/build.dart` remains the executor for local/CI build orchestration, tag validation, version mutation, and MSIX synchronization; `.github/workflows/release.yml` remains unchanged; generated build reports and release manifests remain evidence outputs rather than committed source of truth.
 
 ### Existing Files Tentatively Intervenable
 
@@ -695,13 +695,13 @@ Harden `tool/build.dart` so version mutation, no-bump behavior, and MSIX synchro
 
 #### State
 
-New planned nested implementation subphase.
+Implemented by agent in the real 9.2.2-to-9.2.3 ZIP and validated statically during 9.2.4. The implementation remained centered on `tool/build.dart`, preserved the Phase 8.6 release boundary, and did not modify `.github/workflows/release.yml` or release publication behavior.
 
-#### Existing Files Tentatively Intervenable
+#### Existing Files Intervened
 
-- `tool/build.dart` — primary implementation target for behavior clarification, guardrails, and log clarity.
-- `pubspec.yaml` — only if implementation/validation intentionally exercises version metadata and leaves source-controlled metadata coherent afterward.
-- `docs/phase9_scavium_wallet.md` — record actual implementation decisions and whether MSIX synchronization behavior changed or was only clarified.
+- `tool/build.dart` — implementation target for behavior clarification, strict version parsing, no-bump semantics, tag normalization/validation, and MSIX synchronization helpers.
+- `pubspec.yaml` — retains the intended version/MSIX values, but its physical MSIX layout requires closure normalization or verification before 9.2.close.
+- `docs/phase9_scavium_wallet.md` — records actual implementation decisions and validation outcome.
 
 #### New Files Tentatively Creatable
 
@@ -734,18 +734,16 @@ Add focused validation so version parsing, tag normalization, version bumping, n
 
 #### State
 
-New planned nested implementation subphase.
+Implemented by agent in the real 9.2.2-to-9.2.3 ZIP and validated statically during 9.2.4. The implementation added focused coverage through `test/build_tool_version_test.dart` rather than introducing a release helper script or invoking platform builds for every identity assertion.
 
-#### Existing Files Tentatively Intervenable
+#### Existing Files Intervened
 
-- `tool/build.dart` — may require small extraction or injectable file handling to make pure behavior testable.
-- `pubspec.yaml` — may require dev dependency changes only if the existing Flutter test stack cannot run the selected validation path.
-- `docs/phase9_scavium_wallet.md` — record the validation strategy and commands used.
+- `tool/build.dart` — exposed and preserved testable version/MSIX behavior without broad release-tool refactoring.
+- `docs/phase9_scavium_wallet.md` — records the validation strategy and commands used.
 
-#### New Files Tentatively Creatable
+#### New Files Created
 
-- `test/build_tool_version_test.dart` — preferred optional test file for deterministic coverage if the build-tool behavior can be tested without triggering Flutter platform builds.
-- `tool/build_version_validation.dart` — fallback optional validation helper only if a test file would over-couple the build tool to Flutter test infrastructure.
+- `test/build_tool_version_test.dart` — focused deterministic coverage for build-version parsing, tag normalization, bump/no-bump behavior, and MSIX version derivation without triggering Flutter platform builds.
 
 #### Technical Justification
 
@@ -756,6 +754,45 @@ Full Android, web, and Windows builds are too expensive and environment-dependen
 - `fvm flutter test test/build_tool_version_test.dart` if a Flutter/Dart test is added.
 - Or a documented `dart run tool/...` validation command if a script-level helper is added.
 - Existing `fvm flutter test` remains green.
+
+---
+
+#### 9.2.2 Implementation Validation Result
+
+Static validation of the real 9.2.2-to-9.2.3 ZIP confirms that the build-tool hardening stayed within the intended boundary:
+
+- `tool/build.dart` still owns version parsing, version mutation, tag validation, MSIX synchronization, CI MSIX overrides, artifact expectation reporting, and release-report generation.
+- `VersionInfo.msixVersion` derives the Windows MSIX value as `buildName.buildNumber`, preserving the locked `x.y.z+n` to `x.y.z.n` contract.
+- `resolveVersion` preserves automatic build-number increment when no semantic override is provided.
+- `resolveVersion` preserves build-number reset to `1` when `--version x.y.z` changes the semantic version.
+- `resolveVersion` keeps `--no-version-bump` as intentional non-mutation and returns the current `pubspec.yaml` version instead of mutating metadata.
+- `validateExpectedTagAgainstPubspec` continues to normalize `vX.Y.Z` and `refs/tags/vX.Y.Z` tags and compare only the semantic version.
+- `syncMsixVersion` remains tied to the resolved build version and reports whether the MSIX value was already synchronized or updated.
+- `.github/workflows/release.yml` was not modified by 9.2.2, preserving the Phase 8.6 CI release boundary.
+
+The implementation does not add store upload, Microsoft Store submission, runtime update delivery, wallet runtime behavior, Settings/About version display changes, theme token work, signing changes, asset changes, transaction changes, backup/restore changes, diagnostics changes, or routing changes.
+
+---
+
+#### 9.2.3 Validation Coverage Result
+
+Static validation of the real ZIP confirms that 9.2.3 added the expected focused validation surface:
+
+- `test/build_tool_version_test.dart` exists and imports `tool/build.dart` directly for low-cost behavior coverage.
+- The test covers strict `version: x.y.z+n` parsing.
+- The test covers simple and `refs/tags/` Git tag normalization.
+- The test rejects tags without the `v` prefix and tags that are not semantic `x.y.z`.
+- The test covers automatic build-number increment without override.
+- The test covers build-number increment when the override matches the current semantic version.
+- The test covers build-number reset when the semantic version changes.
+- The test covers `--no-version-bump` as non-mutating behavior even if an override is provided.
+- The test covers MSIX version derivation from a resolved `VersionInfo`.
+
+The validation strategy is coherent with the 9.2 plan because it tests the identity logic directly without invoking Android, web, Windows, MSIX packaging, signing, CI release upload, generated release reports, or generated artifact discovery.
+
+#### 9.2.3 Static Finding for Closure
+
+The code-level intent is coherent, but the current ZIP must not be considered fully closure-ready until the committed `pubspec.yaml` layout is normalized: the `identity_name` and `msix_version` values are present with the expected values, but static byte inspection shows an embedded carriage return between them instead of a normal line break. 9.2.4 documents the final operator/developer contract, and 9.2.close must verify or correct that layout before declaring the phase closed.
 
 ---
 
@@ -774,15 +811,15 @@ Align trunk documentation with the final 9.2 behavior so operators and developer
 
 #### State
 
-New planned nested implementation subphase.
+Completed documentation alignment subphase from the real 9.2.2-to-9.2.3 implementation ZIP. This step records the implemented build-tool behavior, the focused validation surface, the operator/developer command contract, and the remaining closure check for the physical `pubspec.yaml` MSIX metadata layout.
 
-#### Existing Files Tentatively Intervenable
+#### Existing Files Intervened
 
-- `docs/release.md` — document final operator commands, no-bump meaning, expected tag validation, and MSIX synchronization evidence.
-- `docs/development.md` — document developer validation flow for build-version hardening.
-- `docs/phase9_scavium_wallet.md` — record the 9.2 documentation result and next subphase.
-- `README.md` — update only if project status should move from planned 9.2 to completed 9.2 after implementation.
-- `docs/index.md` — update only if the Phase 9 ledger should move from next 9.2 to completed 9.2 after implementation.
+- `docs/phase9_scavium_wallet.md` — records the implemented 9.2.2/9.2.3 behavior, the 9.2.4 alignment result, and the remaining closure check.
+- `docs/release.md` — records operator-facing command expectations, mutation boundaries, no-bump behavior, tag validation, and MSIX synchronization evidence.
+- `docs/development.md` — records developer-facing focused validation expectations and the closure blocker around `pubspec.yaml` layout normalization.
+- `README.md` — updates project status from early active 9.2 to implemented/pending-closure 9.2.
+- `docs/index.md` — updates the Phase 9 ledger to reflect implemented 9.2.2/9.2.3 and active 9.2.4/9.2.close.
 
 #### New Files Tentatively Creatable
 
@@ -796,7 +833,19 @@ Version tooling is operationally sensitive. The implementation is incomplete unl
 
 - Documentation states whether `--no-version-bump` intentionally preserves `pubspec.yaml`.
 - Documentation states when `msix_config.msix_version` is synchronized.
+- Documentation states that `test/build_tool_version_test.dart` is the focused validation surface for 9.2 behavior.
+- Documentation records the remaining `pubspec.yaml` physical-layout check before 9.2.close.
 - Documentation does not claim automatic store upload, Microsoft Store submission, or runtime update delivery.
+
+#### 9.2.4 Documentation Alignment Result
+
+Completed as a documentation-only subphase over the real 9.2.2-to-9.2.3 ZIP. The release and development documents now explain that normal build execution may mutate `pubspec.yaml`, `--no-version-bump` intentionally does not mutate it, expected-tag validation compares the Git tag against the semantic version only, and Windows MSIX synchronization derives `msix_config.msix_version` from the resolved build identity as `x.y.z.n`.
+
+The alignment also records the practical validation boundary introduced by 9.2.3: `test/build_tool_version_test.dart` is the low-cost coverage surface for version parsing, tag normalization, bump/no-bump behavior, and MSIX derivation. Full platform builds remain release validation, not the only way to verify build identity rules.
+
+9.2.4 does not modify code, `.agent/*`, generated release artifacts, CI release workflow, wallet runtime, Settings/About runtime version display, theme work, signing, assets, transactions, backup/restore, diagnostics, or routing.
+
+The only closure blocker identified during 9.2.4 validation is physical YAML layout: `pubspec.yaml` contains the intended `identity_name` and `msix_version` values, but they must be normalized onto separate auditable lines before 9.2.close declares the phase fully coherent.
 
 ---
 
@@ -804,11 +853,12 @@ Version tooling is operationally sensitive. The implementation is incomplete unl
 
 #### Objective
 
-Close 9.2 by confirming that build-version mutation, no-bump behavior, tag validation, and MSIX synchronization are implemented, validated, and documented coherently.
+Close 9.2 by confirming that build-version mutation, no-bump behavior, tag validation, MSIX synchronization, focused validation coverage, and normalized source-controlled MSIX metadata layout are implemented, validated, and documented coherently.
 
 #### Scope
 
 - Record the actual files changed by 9.2 implementation.
+- Verify or correct the `pubspec.yaml` physical layout so `identity_name` and `msix_version` are separate normal YAML lines before closure.
 - Record the exact validation commands and outcomes.
 - Confirm runtime version display from 9.1 remains intact.
 - Confirm 9.3 remains the next executable implementation subphase.
@@ -838,6 +888,7 @@ None expected.
 - `fvm flutter analyze`
 - `fvm flutter test`
 - Focused build-version validation command or test introduced by 9.2.
+- Confirm `pubspec.yaml` keeps `version: 0.2.2+1` and `msix_config.msix_version: 0.2.2.1` on normal auditable lines, unless the closure intentionally bumps version metadata.
 - Confirm the next executable implementation subphase is `9.3 — Theme Token Normalization`.
 
 ---

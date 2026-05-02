@@ -396,17 +396,24 @@ Build/version hardening in Phase 9 should document whether a command mutates `pu
 
 ### Phase 9.2 Build Version & MSIX Synchronization Hardening
 
-Phase 9.2 is active as the compact implementation sequence after the completed runtime version surface. 9.2.1 is complete as the build-version baseline inspection and contract lock. Development should execute it without changing release publication semantics, wallet runtime behavior, or theme behavior.
+Phase 9.2 is active as the compact implementation sequence after the completed runtime version surface. 9.2.1 completed the build-version baseline inspection and contract lock, 9.2.2 hardened the build-tool/MSIX behavior boundary, and 9.2.3 introduced focused validation coverage. Development should continue to treat the phase as build/version hardening only; it does not change release publication semantics, wallet runtime behavior, Settings/About runtime version display, or theme behavior.
 
-The planned nested sequence is:
+The nested sequence status is:
 
 - 9.2.1 — Build Version Baseline Inspection and Contract — completed;
-- 9.2.2 — Build Tool Version and MSIX Behavior Hardening;
-- 9.2.3 — Build Version Validation Coverage;
-- 9.2.4 — Release and Development Documentation Alignment;
-- 9.2.close — Build Version & MSIX Synchronization Hardening Closure.
+- 9.2.2 — Build Tool Version and MSIX Behavior Hardening — implemented by agent;
+- 9.2.3 — Build Version Validation Coverage — implemented by agent;
+- 9.2.4 — Release and Development Documentation Alignment — documented from the implemented ZIP;
+- 9.2.close — Build Version & MSIX Synchronization Hardening Closure — pending.
 
-The expected implementation files are `tool/build.dart`, optional focused build-version validation tests or helpers, and trunk documentation. `pubspec.yaml` may be touched only by intentional build/version behavior or dependency/test needs, and it must remain coherent after validation. `.github/workflows/release.yml` should remain outside the default 9.2 scope unless code inspection proves a real CI inconsistency.
+The implementation files are `tool/build.dart` and `test/build_tool_version_test.dart`, with trunk documentation updated to describe the operator and developer contract. `tool/build.dart` remains the owner of strict pubspec version parsing, version bump/no-bump behavior, expected-tag validation, and Windows MSIX synchronization. `test/build_tool_version_test.dart` is the focused validation surface and should be used before full platform builds when changing version identity logic.
+
+Recommended focused validation for future edits:
+
+    fvm flutter test test/build_tool_version_test.dart
+    dart run tool/build.dart --check-version --expected-tag v0.2.2
+
+`pubspec.yaml` may be touched only by intentional build/version behavior or closure normalization, and it must remain coherent after validation. Before 9.2.close, confirm that `version: 0.2.2+1` and `msix_config.msix_version: 0.2.2.1` are preserved unless intentionally bumped, and that `identity_name` and `msix_version` are stored on separate normal YAML lines. `.github/workflows/release.yml` remains outside the 9.2 implementation because the real agent execution did not prove a CI workflow inconsistency.
 
 ### Phase 9.1 Runtime Version Surface
 

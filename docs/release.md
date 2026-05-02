@@ -191,10 +191,21 @@ Phase 9.2.1 confirms the release-facing version contract before further build-to
 
 This contract does not introduce a new publication target, automatic store upload, Microsoft Store submission, or runtime update mechanism. It preserves the Phase 8.6 release automation boundary while giving 9.2.2 and 9.2.3 a stable baseline for hardening and validation.
 
+Phase 9.2.2 and 9.2.3 then implemented that contract through the existing build tool instead of adding a parallel release mechanism:
+
+- normal build execution resolves the current version and may update `pubspec.yaml` by incrementing the build number;
+- `--version x.y.z` preserves the semantic version contract and resets the build number to `1` only when the semantic version changes;
+- `--no-version-bump` intentionally leaves `pubspec.yaml` unchanged and should be read as a no-mutation operator choice, not as a failed synchronization;
+- `--check-version --expected-tag vX.Y.Z` validates the Git tag against the semantic version only and does not mutate metadata;
+- Windows MSIX packaging synchronizes `msix_config.msix_version` from the resolved build version as `x.y.z.n`;
+- `test/build_tool_version_test.dart` is the focused validation surface for version parsing, tag normalization, bump/no-bump behavior, and MSIX derivation.
+
+Before 9.2 closes, the committed `pubspec.yaml` layout must also be visibly clean: `identity_name` and `msix_version` must appear as separate normal YAML lines while preserving the intended values `com.scavium.wallet` and `0.2.2.1` unless the closure intentionally bumps metadata.
+
 Example:
 
     0.2.1+3 → 0.2.1+4
-    0.2.2+1
+    0.2.2+1 → 0.2.2.1 for MSIX
 
 ---
 
