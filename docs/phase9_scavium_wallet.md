@@ -2041,44 +2041,72 @@ Phase 9.1 already moved About version data to the app identity boundary. Phase 9
 
 #### Objective
 
-Close 9.6 by validating the implemented Settings/About alignment against the real code and updating documentation from evidence.
+Close 9.6 by validating the implemented Settings/About alignment and final SCAVIUM visual polish against the real code, then update the documentation from evidence without changing source code.
 
 #### Scope
 
-- Validate app-root theme-mode behavior remains intact.
-- Validate Settings Appearance selector behavior remains intact.
-- Validate About version display still uses the dynamic runtime identity boundary.
-- Validate security/recovery, signing, diagnostics, and danger-zone actions remain available.
+- Validate that app-root theme-mode behavior remains intact after the 9.6 Settings/About and theme-polish sequence.
+- Validate that the Settings Appearance selector still exposes `system`, `light`, and `dark` and remains backed by the existing 9.5 preference boundary.
+- Validate that About version display still consumes the dynamic runtime identity boundary.
+- Validate that the final SCAVIUM visual system uses the orange primary, dark-first palette, paired light/dark surfaces, Lucide iconography, and centralized icon-size tokens introduced during the 9.6 adjustment sequence.
+- Validate that security/recovery, signing, diagnostics, danger-zone, account, asset, activity, unlock, navigation, and Settings surfaces remain available and visually coherent.
 - Update trunk documentation from the implemented state without rewriting or summarizing prior history.
 
 #### State
 
-New documentation-closure planning subphase generated from the real post-9.5 ZIP.
+Closed as documentation-only closure from the real final 9.6 adjustment ZIP. No Dart source, test, `.agent/*`, build, release, platform, generated artifact, dependency, or operational file was modified by this closure subphase.
 
-#### Existing Files Tentatively Intervenable
+#### Existing Files Intervened
 
-- `docs/phase9_scavium_wallet.md` — record 9.6 implementation results and closure evidence.
-- `README.md` — update the active Phase 9 summary if 9.6 becomes complete.
-- `docs/index.md` — update the Phase 9 index narrative if 9.6 becomes complete.
-- `docs/ux.md` — update only if the implementation materially changes Settings/About UX behavior.
-- `docs/features.md` — update only if the implemented Settings/About surface changes user-facing feature descriptions.
-- `docs/development.md` — update only if validation commands or developer workflow change.
+- `docs/phase9_scavium_wallet.md` — records the implemented 9.6 result, the final Settings/About validation evidence, the SCAVIUM design-token and Lucide iconography adjustments, and the closure boundary for 9.6.
+- `README.md` — updates the active Phase 9 summary and phase ledger so 9.6 is no longer described as open/pending and the final visual-system result is visible from the project entry point.
+- `docs/index.md` — extends the Phase 9 narrative with the closed 9.6 sequence and its real implementation result.
+- `docs/ux.md` — documents the final Settings/About, appearance, light/dark, and Lucide icon UX outcome from the implemented state.
+- `docs/features.md` — updates the Phase 9 user-facing and non-user-facing feature record to include the completed 9.6 Settings/About and visual-system polish.
+- `docs/architecture_deep.md` — records the final Phase 9 visual-runtime boundary, including centralized iconography tokens and the dark-first SCAVIUM theme contract.
 
-#### New Files Tentatively Creatable
+#### New Files Created
 
-None expected.
+None.
 
-#### Technical Justification
+#### Execution Record
 
-The closure must be evidence-based. Because 9.6.1 corrected the baseline against the real ZIP, 9.6.5 must explicitly confirm the actual polish completed by the code-only subphases before final Phase 9 closure proceeds.
+Phase 9.6.5 was executed after the code-only 9.6.2–9.6.4 implementation sequence and the subsequent visual-polish adjustments were completed. The final ZIP confirms that 9.6 closed over the real implemented state rather than over the obsolete dark-only baseline corrected by 9.6.1.
 
-#### Expected Validations
+The final implementation preserves the Phase 9.5 runtime appearance ownership:
 
-- `fvm flutter analyze`
-- `fvm flutter test`
-- Manual Settings/About smoke review in system, light, and dark modes.
-- Confirm documentation and ZIP deliverable list match exactly.
-- Confirm no `.agent/*`, generated release artifacts, code files, platform files, or unrelated documents are included in documentation-only closure unless explicitly requested.
+- `lib/app/app.dart` still watches `themeModeControllerProvider` and applies `theme: AppTheme.lightTheme`, `darkTheme: AppTheme.darkTheme`, and `themeMode: themeModePreference.themeMode` through `MaterialApp.router`.
+- `lib/app/theme/theme_mode_preference.dart`, `theme_mode_repository.dart`, `theme_mode_repository_impl.dart`, and `theme_mode_controller.dart` remain the preference, persistence, and runtime-state boundary.
+- `lib/features/settings/presentation/settings_screen.dart` still exposes `Appearance` through `ThemeModeSelector` before the security/recovery, signing, diagnostics, danger-zone, and about surfaces.
+- `test/settings_screen_test.dart` validates the organized Settings sections, dynamic About version display, wide-surface availability, and selector-driven theme-mode update.
+- `test/theme_mode_selector_test.dart` validates the selector options, selected value, accessibility semantics, and Lucide theme-mode icons.
+
+The final implementation also confirms the visual polish completed during 9.6:
+
+- `lib/app/theme/tokens/scavo_colors.dart` defines the SCAVIUM orange brand primary (`0xFFF97316`) and keeps green constrained to semantic success instead of general selection/branding.
+- `lib/app/theme/tokens/scavo_theme_colors.dart` owns the dark-first and light theme-specific surface, text, icon, action, semantic, and focus values.
+- `lib/app/theme/tokens/scavo_iconography.dart` centralizes icon sizes for sidebar, section, action, inline, and state contexts.
+- `pubspec.yaml` includes `lucide_icons`, and the app shell, Settings, Home, Assets, Activity/History, Wallet/Accounts, Signing, and transaction-detail surfaces now use Lucide iconography rather than the heavier default visual language.
+- Assets avatars now use a primary-tinted SCAVIUM surface instead of the previous generic violet treatment.
+- Unlock and light-mode text surfaces use theme-owned `onSurface` / `onSurfaceVariant` values, improving legibility without changing unlock behavior.
+
+This closes 9.6 as a Settings/About and visual-coherence phase, not as a wallet-domain expansion. It does not change wallet custody, account derivation, asset metadata semantics, transaction history semantics, signing behavior, backup/restore payloads, diagnostics behavior, routing contracts, release tooling, CI workflows, generated artifacts, remote configuration, analytics, telemetry, or `.agent/*` workflow files.
+
+#### Documentation Validation
+
+- Confirmed this closure modified documentation only.
+- Confirmed no `.agent/*` file was generated or modified.
+- Confirmed no Dart source, test, platform, build, release, generated, dependency, or operational file is included in the closure deliverable.
+- Confirmed the 9.6 closure narrative is based on the real final ZIP evidence: app-root runtime theme selection, Settings Appearance selector, dynamic About identity, SCAVIUM orange primary, dark-first paired themes, Lucide iconography, icon-size tokens, light-mode contrast polish, and asset-avatar polish.
+- Confirmed the next Phase 9 step is `9.close — Application Identity, Versioning, and Visual Theme Maturity Closure`.
+
+---
+
+#### Phase 9.6 Closure Summary
+
+Phase 9.6 closes the Settings/About UX alignment sequence. The phase began by correcting the documentation baseline in 9.6.1: runtime theme-mode selection, local persistence, app-root reactive wiring, and the Settings Appearance selector were already present after 9.5 and therefore were not reimplemented in 9.6. The code-only 9.6 sequence then polished the Settings/About surface around that existing boundary and the subsequent visual adjustment passes aligned the application with the SCAVIUM brand identity.
+
+The final state is a dark-first SCAVIUM Wallet visual system with first-class light-mode support, orange primary actions and selected states, green reserved for semantic success, centralized theme and icon tokens, Lucide icons for a lighter premium visual weight, and a Settings/About surface that clearly groups Appearance, security/recovery, signing, diagnostics, danger-zone, and dynamic app identity information. 9.6 therefore completes the UX bridge between the Phase 9 identity/version work and the final Phase 9 closure.
 
 ---
 
@@ -2144,4 +2172,4 @@ Status: Active.
 
 Phase 9 is opened as the active next phase after Phase 8.6 closure. It is not a continuation of release/distribution implementation, but it depends on the Phase 8.6 versioning and release-tooling baseline.
 
-Phase 9.0 is complete as the phase definition and documentation lock. Phase 9.1 is complete as the runtime application version surface: Settings/About now displays dynamic runtime metadata through `lib/core/app_identity` instead of hardcoded UI copy. Phase 9.2 is closed as the build-version and MSIX synchronization hardening sequence. Phase 9.3 is closed as the token-first visual-system foundation. Phase 9.4 is closed as the light/dark theme implementation bridge. Phase 9.5 is closed as the runtime theme-mode selection and persistence bridge. `lib/app/theme/tokens/` owns the SCAVIUM token namespace, `ScavoThemeColors` owns the mode-specific light/dark color boundary, `AppColors` and `AppTextStyles` remain compatibility facades, `AppTheme.darkTheme` and `AppTheme.lightTheme` are built from the same centralized theme path, shared visual widgets rely on theme-owned values, `ThemeModePreference` owns `system`/`light`/`dark` preference semantics, `ThemeModeController` owns runtime preference state, `LocalThemeModeRepository` persists the selection locally, `MaterialApp.router` applies the selected mode reactively, and Settings exposes the bounded Appearance selector. The next executable implementation phase is 9.6 — Settings and About UX Alignment.
+Phase 9.0 is complete as the phase definition and documentation lock. Phase 9.1 is complete as the runtime application version surface: Settings/About now displays dynamic runtime metadata through `lib/core/app_identity` instead of hardcoded UI copy. Phase 9.2 is closed as the build-version and MSIX synchronization hardening sequence. Phase 9.3 is closed as the token-first visual-system foundation. Phase 9.4 is closed as the light/dark theme implementation bridge. Phase 9.5 is closed as the runtime theme-mode selection and persistence bridge. `lib/app/theme/tokens/` owns the SCAVIUM token namespace, `ScavoThemeColors` owns the mode-specific light/dark color boundary, `AppColors` and `AppTextStyles` remain compatibility facades, `AppTheme.darkTheme` and `AppTheme.lightTheme` are built from the same centralized theme path, shared visual widgets rely on theme-owned values, `ThemeModePreference` owns `system`/`light`/`dark` preference semantics, `ThemeModeController` owns runtime preference state, `LocalThemeModeRepository` persists the selection locally, `MaterialApp.router` applies the selected mode reactively, and Settings exposes the bounded Appearance selector. The next Phase 9 step is 9.close — Application Identity, Versioning, and Visual Theme Maturity Closure.

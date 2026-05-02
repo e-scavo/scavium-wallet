@@ -370,7 +370,7 @@ The product now has safer diagnostics, clearer signing and backup warning surfac
 
 ## 🎨 Phase 9 Application Identity and Theme Features
 
-Phase 9 is open to add identity and appearance maturity rather than new wallet transaction capabilities. Phase 9.0 completed the documentation lock, Phase 9.1 completed the runtime app version surface, Phase 9.2 closed build/MSIX version hardening, Phase 9.3 closed token normalization, Phase 9.4 closed paired light/dark theme construction, and Phase 9.5 closed runtime theme-mode selection and persistence.
+Phase 9 is open to add identity and appearance maturity rather than new wallet transaction capabilities. Phase 9.0 completed the documentation lock, Phase 9.1 completed the runtime app version surface, Phase 9.2 closed build/MSIX version hardening, Phase 9.3 closed token normalization, Phase 9.4 closed paired light/dark theme construction, Phase 9.5 closed runtime theme-mode selection and persistence, and Phase 9.6 closed Settings/About UX alignment plus final visual-system polish.
 
 Implemented Phase 9.1 user-visible capability:
 
@@ -381,18 +381,21 @@ Implemented Phase 9.5 user-visible capability:
 - local Appearance selection in Settings with `system`, `light`, and `dark` options;
 - persisted appearance preference applied reactively at the app root;
 
-Remaining planned user-visible capability includes:
-- smoother Settings/About hierarchy for identity and appearance controls.
+Implemented Phase 9.6 user-visible capability:
+
+- smoother Settings/About hierarchy for Appearance, security/recovery, signing, diagnostics, danger-zone, and About identity controls;
+- SCAVIUM-aligned visual polish with orange primary actions/selected states, dark-first identity, improved light-mode legibility, and lighter Lucide iconography.
 
 Implemented non-user-facing 9.1 capability:
 
 - centralized runtime version formatting and provider-based metadata resolution under `lib/core/app_identity`;
 
-Remaining planned non-user-facing capabilities include:
+Implemented non-user-facing Phase 9 visual-system capabilities include:
 
-- explicit validation of build/MSIX version synchronization;
-- reduced direct color coupling inside UI code;
-- token-based theme construction for future maintainability.
+- explicit validation of build/MSIX version synchronization through the 9.2 build-tool hardening sequence;
+- reduced direct color coupling inside UI code through the token namespace and theme-specific color boundary;
+- token-based theme construction for future maintainability;
+- centralized icon-size ownership through `ScavoIconSize` and Lucide-based icon usage across the primary wallet surfaces.
 
 Phase 9 does not add WalletConnect, dApp connectivity, new transaction flows, new signing flows, analytics, telemetry, remote configuration, or white-label runtime customization.
 
@@ -420,3 +423,28 @@ Implemented appearance features:
 - light and dark rendering continue to use the centralized `AppTheme.lightTheme` and `AppTheme.darkTheme` definitions delivered by 9.4.
 
 The feature remains intentionally local and bounded. Phase 9.5 does not add remote preferences, account-synced settings, telemetry, analytics, white-label configuration, new wallet operations, new signing behavior, backup changes, diagnostics changes, or release tooling changes.
+
+
+---
+
+## 🎨 Phase 9.6 Implemented Settings/About and Visual Polish Features
+
+Phase 9.6 completes the user-facing Settings/About alignment that follows the Phase 9.5 runtime appearance selector.
+
+Implemented Settings/About features:
+
+- Appearance remains available in Settings with `System`, `Light`, and `Dark` choices;
+- Settings groups Appearance, security/recovery, signing, diagnostics, danger-zone, and About identity surfaces with clearer hierarchy;
+- About continues to show dynamic installed version information through the app identity provider;
+- Settings tests cover section visibility, dynamic About version display, wide-surface availability, and selector-driven preference updates.
+
+Implemented visual-system features:
+
+- orange SCAVIUM primary action and selected-state treatment;
+- dark-first theme identity with functional light-mode support;
+- green reserved for semantic success/confirmed states;
+- Lucide iconography across navigation, Settings, Home, Assets, Activity/History, Wallet/Accounts, Signing, and transaction detail surfaces;
+- centralized icon sizing through `ScavoIconSize`;
+- primary-tinted asset avatars and improved unlock/light-mode text contrast.
+
+The feature remains bounded to application identity and visual maturity. Phase 9.6 does not add WalletConnect, dApp connectivity, new transaction flows, new signing semantics, analytics, telemetry, remote preferences, white-labeling, backup payload changes, diagnostics behavior changes, or release tooling behavior.

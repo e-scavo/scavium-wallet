@@ -276,3 +276,16 @@ This boundary matters because later Phase 9 work depends on predictable token se
 Phase 9.3 converts the visual-token plan into a concrete app-theme boundary. The token namespace is now rooted at `lib/app/theme/tokens/` and split by visual intent instead of by individual component: `scavo_colors.dart` owns semantic color intent, `scavo_spacing.dart` owns the compact layout scale, `scavo_radius.dart` owns shape scale, `scavo_elevation.dart` owns elevation scale, `scavo_typography.dart` owns Inter-backed text styles, and `scavo_tokens.dart` exports the namespace for theme-layer consumers.
 
 This boundary is intentionally conservative. `AppColors` and `AppTextStyles` remain available as compatibility facades so existing screens and shared widgets can migrate incrementally. `AppTheme.darkTheme` consumes the token namespace, and shared widgets such as cards, buttons, section titles, snackbars, and confirmation dialogs prove token adoption at the shared-component layer. This compatibility boundary allowed the later Phase 9 light/dark and theme-mode subphases to add paired themes and runtime selection without rewriting stabilized screens.
+
+
+---
+
+## Phase 9.6 Settings/About and Visual Runtime Closure
+
+Phase 9.6 closes the visual-runtime path introduced across Phase 9 without moving ownership between layers. Runtime appearance selection remains an application-theme concern: `ThemeModePreference` owns the `system` / `light` / `dark` model, the local theme-mode repository owns persistence, `ThemeModeController` owns Riverpod state, and `ScaviumWalletApp` applies `AppTheme.lightTheme`, `AppTheme.darkTheme`, and the selected `ThemeMode` through `MaterialApp.router`.
+
+Settings remains a presentation surface over those boundaries. It exposes `ThemeModeSelector`, preserves the existing security/recovery, signing, diagnostics, danger-zone, and About actions, and consumes the app identity provider for dynamic installed-version display. It does not own serialization, persistence, app-root theme application, or package metadata resolution.
+
+The final 9.6 visual polish extends the token architecture rather than replacing it. `ScavoColors` owns the SCAVIUM orange primary and semantic state colors, `ScavoThemeColors` owns dark-first and light theme-specific values, `AppTheme` builds Material themes from those values, and `ScavoIconSize` centralizes icon sizing. The Lucide icon migration is therefore a presentation-language refinement over the token system, not a new feature-domain boundary.
+
+This closure keeps Phase 9 visually meaningful while preserving wallet custody, account, asset, transaction, signing, backup, diagnostics, routing, release, CI, and generated-artifact boundaries.

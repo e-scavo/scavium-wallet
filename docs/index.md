@@ -226,7 +226,7 @@ The Phase 9 baseline includes:
 - allowing runtime theme-mode selection and persistence;
 - aligning Settings/About as the application identity and appearance control surface.
 
-Phase 9 is documented in `docs/phase9_scavium_wallet.md`. Phase 9.1 is complete, Phase 9.2 — Build Version & MSIX Synchronization Hardening is closed, Phase 9.3 — Theme Token Normalization is closed as the compact token-foundation sequence, Phase 9.4 — Light/Dark Theme Implementation is closed as the paired-theme implementation bridge, and Phase 9.5 — Theme Mode Runtime Selection and Persistence is closed as the runtime preference bridge. The SCAVIUM token namespace is implemented under `lib/app/theme/tokens/`, `ScavoThemeColors` owns the mode-specific light/dark color boundary, compatibility facades remain stable, shared visual widgets consume theme-owned values, `ThemeModePreference` owns `system` / `light` / `dark`, `ThemeModeController` owns reactive state, and Settings exposes the bounded Appearance selector.
+Phase 9 is documented in `docs/phase9_scavium_wallet.md`. Phase 9.1 is complete, Phase 9.2 — Build Version & MSIX Synchronization Hardening is closed, Phase 9.3 — Theme Token Normalization is closed as the compact token-foundation sequence, Phase 9.4 — Light/Dark Theme Implementation is closed as the paired-theme implementation bridge, Phase 9.5 — Theme Mode Runtime Selection and Persistence is closed as the runtime preference bridge, and Phase 9.6 — Settings and About UX Alignment is closed as the Settings/About and final visual-coherence sequence. The SCAVIUM token namespace is implemented under `lib/app/theme/tokens/`, `ScavoThemeColors` owns the mode-specific light/dark color boundary, compatibility facades remain stable, shared visual widgets consume theme-owned values, `ThemeModePreference` owns `system` / `light` / `dark`, `ThemeModeController` owns reactive state, Settings exposes the bounded Appearance selector, and Lucide iconography plus centralized icon-size tokens now complete the lighter SCAVIUM visual language.
 
 Phase 9.1 closed the runtime version surface through the compact implementation sequence derived from the real Phase 9.0 ZIP:
 
@@ -273,5 +273,15 @@ Phase 9.5 is closed as the runtime selection and persistence sequence over the 9
 - 9.5.4 — Settings Appearance Selector and UX Integration — closed/code-only
 - 9.5.5 — Theme Mode Runtime Selection Validation and Documentation Closure — closed/documentation-only
 
-The 9.5 result is now physically confirmed as the runtime selection and persistence bridge. The code contains the paired theme contract, theme-mode preference primitives, `ThemeModeController`, app-root reactive wiring through `MaterialApp.router`, and the Settings Appearance selector. The next Phase 9 implementation target remains 9.6 — Settings and About UX Alignment, now framed as UX polish over the completed runtime appearance baseline rather than as bridge reconstruction.
+The 9.5 result is now physically confirmed as the runtime selection and persistence bridge. The code contains the paired theme contract, theme-mode preference primitives, `ThemeModeController`, app-root reactive wiring through `MaterialApp.router`, and the Settings Appearance selector. Phase 9.6 is therefore closed as polish over the completed runtime appearance baseline rather than as bridge reconstruction.
+
+Phase 9.6 is closed as the Settings/About UX alignment and visual-coherence sequence:
+
+- 9.6.1 — Settings/About Baseline Reconciliation — closed/documentation-only
+- 9.6.2 — Settings Hierarchy and Action Grouping Polish — closed/code-only
+- 9.6.3 — Appearance Selector UX and Accessibility Polish — closed/code-only
+- 9.6.4 — About Identity and Responsive Settings Review — closed/code-only
+- 9.6.5 — Settings/About UX Validation and Documentation Closure — closed/documentation-only
+
+The closed 9.6 result keeps runtime appearance ownership exactly where 9.5 placed it: `MaterialApp.router` consumes `ThemeModeController`, Settings exposes `ThemeModeSelector`, and About consumes the app identity provider. The final visual adjustments align the app with the SCAVIUM brand by using orange as the primary action/selection color, keeping green reserved for semantic success, preserving a dark-first identity, improving light-mode legibility, replacing dense iconography with Lucide icons, and centralizing icon sizes in `ScavoIconSize`. This closes 9.6 without changing wallet custody, account, asset, transaction, signing, backup, diagnostics, routing, release, CI, or generated-artifact behavior.
 

@@ -327,4 +327,16 @@ Implemented UX behavior:
 - the preference survives local app restarts through local persistence;
 - existing sensitive Settings actions keep their previous copy, placement, and confirmation behavior.
 
-The UX boundary remains narrow. Phase 9.5 does not introduce account-synced preferences, remote appearance configuration, white-label controls, new onboarding decisions, or a broader Settings/About layout rewrite. That broader hierarchy and polish work remains the purpose of Phase 9.6.
+The UX boundary remains narrow. Phase 9.5 does not introduce account-synced preferences, remote appearance configuration, white-label controls, new onboarding decisions, or a broader Settings/About layout rewrite. That broader hierarchy and polish work is completed by Phase 9.6.
+
+---
+
+## 🎨 Phase 9.6 Settings/About and Visual Polish UX
+
+Phase 9.6 closes the Settings/About UX alignment work over the already-implemented runtime appearance selector. Settings now reads as a coherent application-control surface: Appearance remains discoverable at the top of the surface, security/recovery, signing, diagnostics, and danger-zone actions remain visually separated, and About continues to display dynamic runtime identity information from the app identity provider rather than hardcoded copy.
+
+The visual polish completed during 9.6 also turns the Phase 9 token foundation into a stronger product identity. SCAVIUM Wallet now uses orange as the primary action and selected-state color, reserves green for semantic success/confirmed states, keeps the dark-first product language as the strongest identity surface, and improves light mode so it is usable and legible rather than a separate pale skin.
+
+Iconography was normalized as part of the final 9.6 UX pass. The app now uses Lucide icons and centralized `ScavoIconSize` values for sidebar, section, action, inline, and state contexts. This reduces the heavy visual weight of the previous icon language while keeping navigation, Settings, account, asset, activity, signing, and transaction surfaces visually consistent across light and dark modes.
+
+The 9.6 UX closure is intentionally bounded. It does not add new wallet operations, account-synced preferences, remote configuration, analytics, telemetry, white-label controls, or a new onboarding decision. It closes the current Settings/About and visual-system maturity layer so later product phases can build on a stable identity surface.
