@@ -282,20 +282,202 @@ Remove hardcoded version display from the application and surface the real appli
 - Display version consistently in the Settings/About surface.
 - Add focused tests where practical.
 
+### State
+
+Planned implementation subphase.
+
+The real Phase 9.0 ZIP confirms that 9.1 is not yet implemented in code. `lib/features/settings/presentation/settings_screen.dart` still renders `Version 0.4.0` as static copy, while `pubspec.yaml` owns `version: 0.2.2+1` and `msix_config.msix_version: 0.2.2.1`. The current dependency set does not include a runtime application metadata package, and there is no existing `lib/core/app_identity` or equivalent version boundary.
+
 ### Existing Files Tentatively Intervenable
 
-- `pubspec.yaml` — add a dependency only if runtime metadata resolution requires it.
-- `lib/features/settings/presentation/settings_screen.dart` — replace hardcoded version copy with dynamic data.
-- `lib/app/*` or `lib/core/*` — introduce the smallest stable identity/version boundary required by the implementation.
-- `test/settings_screen_test.dart` — validate Settings/About behavior if feasible.
+- `pubspec.yaml` — add a Flutter-compatible runtime metadata dependency only if the implementation chooses package-based version resolution instead of generated metadata.
+- `lib/features/settings/presentation/settings_screen.dart` — replace the hardcoded About subtitle with dynamic application version/build metadata.
+- `test/settings_screen_test.dart` — extend the existing Settings widget coverage so the About section remains present and can be validated with a deterministic version source.
+- `docs/phase9_scavium_wallet.md` — record the actual 9.1 implementation result and validation outcome when 9.1 is executed.
+- `README.md` — update only if the runtime version surface becomes part of the visible product summary after implementation.
+- `docs/index.md` — update only if the active Phase 9 ledger needs to advance from planning to completed 9.1 state.
 
 ### New Files Tentatively Creatable
 
-- A small application identity/version provider file if the existing structure has no suitable owner.
+- `lib/core/app_identity/app_version_info.dart` — optional value object for app name, semantic version, build number, and display label if the implementation benefits from a typed boundary.
+- `lib/core/app_identity/app_version_provider.dart` — optional Riverpod provider/service owner for resolving runtime package metadata and exposing it to Settings without coupling UI directly to platform APIs.
+- `test/app_version_info_test.dart` — optional focused unit test if formatting/version-label behavior is extracted from the Settings widget.
 
 ### Technical Justification
 
-The application must not display a version that diverges from the version used to build and distribute the wallet. Runtime identity should derive from metadata, not from manually edited UI copy.
+The application must not display a version that diverges from the version used to build and distribute the wallet. Runtime identity should derive from metadata, not from manually edited UI copy. A small identity boundary keeps Settings/About simple and prevents future visual or release tooling work from depending on hardcoded UI text.
+
+### Expected Validations
+
+- `fvm flutter analyze`
+- `fvm flutter test`
+- Settings/About no longer contains a literal stale version string.
+- Runtime display resolves the app name/version/build number from a single metadata boundary.
+- Tests avoid depending on the developer machine or generated build artifacts.
+
+### 9.1 Subphase Determination
+
+Phase 9 already defines `9.1 — Runtime App Version Surface` as the next executable implementation subphase. Because 9.1 is small but crosses dependency metadata, application boundary, UI, and tests, it should be executed as a compact set of nested subphases rather than as one unstructured edit.
+
+The following nested subphases are derived from the real ZIP and are intentionally limited to the runtime version surface. They do not touch build/MSIX synchronization, theme tokens, light/dark behavior, theme persistence, signing, assets, transactions, routing, backup/restore, diagnostics behavior, or release publication.
+
+---
+
+### 9.1.1 — Runtime Version Metadata Boundary
+
+#### Objective
+
+Introduce the smallest stable runtime identity boundary capable of resolving the application name, semantic version, build number, and display label from project/build metadata.
+
+#### Scope
+
+- Add a runtime metadata dependency only if required by the selected implementation strategy.
+- Create a small app identity/version owner under the existing application/core layering.
+- Keep version formatting centralized so Settings does not manually compose version strings.
+- Avoid introducing release-tooling logic into runtime code.
+
+#### State
+
+New planned nested implementation subphase.
+
+#### Existing Files Tentatively Intervenable
+
+- `pubspec.yaml` — required only if the implementation uses a package such as `package_info_plus` to resolve runtime metadata across Flutter targets.
+- `pubspec.lock` — updated automatically only if a dependency is added through `flutter pub get`.
+- `docs/phase9_scavium_wallet.md` — record whether the implementation selected package-based metadata or generated metadata.
+
+#### New Files Tentatively Creatable
+
+- `lib/core/app_identity/app_version_info.dart` — typed representation of app identity metadata and display formatting.
+- `lib/core/app_identity/app_version_provider.dart` — Riverpod provider/service wrapper that isolates platform/package metadata resolution from UI code.
+
+#### Technical Justification
+
+The real code currently has no application identity owner and no package capable of reading runtime package metadata. Introducing a narrow boundary prevents `SettingsScreen` from depending directly on platform package APIs and gives tests a stable override point.
+
+#### Expected Validations
+
+- Metadata boundary exposes deterministic display data.
+- No Settings UI behavior is changed yet except through later subphases.
+- Added dependency, if any, is limited to runtime package metadata and does not alter wallet/domain behavior.
+
+---
+
+### 9.1.2 — Settings/About Runtime Version Integration
+
+#### Objective
+
+Replace the hardcoded About version text in Settings with data from the runtime version metadata boundary.
+
+#### Scope
+
+- Convert the About tile from static version copy to provider-backed version display.
+- Preserve the existing Settings section structure introduced during Phase 8.4.
+- Keep loading/error fallback behavior quiet and product-safe.
+- Avoid broad Settings redesign; appearance controls belong to later Phase 9 subphases.
+
+#### State
+
+New planned nested implementation subphase.
+
+#### Existing Files Tentatively Intervenable
+
+- `lib/features/settings/presentation/settings_screen.dart` — replace `Version 0.4.0` with runtime identity display while preserving the existing Settings sections.
+- `test/settings_screen_test.dart` — keep existing Settings section assertions valid after the About tile becomes dynamic.
+- `docs/phase9_scavium_wallet.md` — record the actual UI integration result.
+
+#### New Files Tentatively Creatable
+
+None expected by default. A small Settings-specific widget may be created only if the About row becomes complex enough to justify reuse.
+
+#### Technical Justification
+
+The exact inconsistency identified by Phase 9.0 lives in `SettingsScreen`: the UI says `Version 0.4.0` while `pubspec.yaml` owns `0.2.2+1`. 9.1.2 closes that visible product inconsistency without touching build tooling or theme work.
+
+#### Expected Validations
+
+- Settings/About still renders `SCAVIUM Wallet`.
+- The stale literal `Version 0.4.0` is removed from runtime UI code.
+- The displayed version derives from the metadata boundary.
+- Settings layout remains responsive and sectioned as before.
+
+---
+
+### 9.1.3 — Runtime Version Surface Test Coverage
+
+#### Objective
+
+Add focused tests that prove the About surface remains stable while the version value is dynamic and overrideable.
+
+#### Scope
+
+- Extend existing Settings widget tests or add a focused identity/version test.
+- Prefer provider overrides or metadata mocks over environment-dependent assertions.
+- Validate the display label format without relying on local release artifacts.
+
+#### State
+
+New planned nested implementation subphase.
+
+#### Existing Files Tentatively Intervenable
+
+- `test/settings_screen_test.dart` — extend the existing Settings coverage to assert dynamic About behavior under a deterministic test value.
+- `pubspec.yaml` — only if test support requires a metadata package already introduced by 9.1.1.
+- `docs/phase9_scavium_wallet.md` — record the executed validation strategy.
+
+#### New Files Tentatively Creatable
+
+- `test/app_version_info_test.dart` — optional unit test for display-label formatting if formatting is extracted into `AppVersionInfo`.
+
+#### Technical Justification
+
+Runtime metadata can vary by platform, test runner, and generated build state. Tests must validate the application contract through a controlled boundary, not by assuming a particular machine-local package result.
+
+#### Expected Validations
+
+- `fvm flutter test test/settings_screen_test.dart`
+- Optional focused unit test for version label formatting if a value object is introduced.
+- Existing Settings section test intent remains intact.
+
+---
+
+### 9.1.close — Runtime App Version Surface Closure
+
+#### Objective
+
+Close 9.1 by confirming that the stale hardcoded version was removed, runtime metadata is surfaced through a controlled boundary, and documentation reflects the implemented state.
+
+#### Scope
+
+- Record actual files intervened by 9.1 implementation.
+- Record validation commands and outcomes.
+- Confirm 9.2 remains the next Phase 9 implementation subphase after 9.1 closure.
+- Update trunk documentation only from the real implemented state.
+
+#### State
+
+Planned documentation closure for 9.1 after implementation.
+
+#### Existing Files Tentatively Intervenable
+
+- `docs/phase9_scavium_wallet.md` — document 9.1 execution result, files touched, validation outcome, and next subphase.
+- `docs/index.md` — advance the Phase 9 status only if 9.1 has actually been implemented and validated.
+- `README.md` — update only if the product summary should explicitly mention dynamic runtime version identity after implementation.
+- `docs/release.md` — update only if the runtime version surface materially affects release/operator guidance; otherwise leave release tooling documentation for 9.2.
+
+#### New Files Tentatively Creatable
+
+None expected.
+
+#### Technical Justification
+
+9.1 closes a visible application identity gap but does not harden build/MSIX synchronization. The closure must therefore avoid claiming 9.2 outcomes while clearly advancing Phase 9 from runtime version display into build-version hardening.
+
+#### Expected Validations
+
+- Confirm no `.agent/*` artifacts are part of documentation delivery.
+- Confirm no theme, build-tool, release workflow, wallet runtime, signing, asset, backup, restore, diagnostics, or routing behavior is documented as changed by 9.1 unless the real implementation proves otherwise.
+- Confirm the next implementation subphase remains `9.2 — Build Version & MSIX Synchronization Hardening`.
 
 ---
 

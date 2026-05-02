@@ -145,6 +145,10 @@ Planned Phase 9 identity and visual-theme maturity work includes:
 
 - 9.0 — Phase Definition & Documentation Lock (completed)
 - 9.1 — Runtime App Version Surface
+  - 9.1.1 — Runtime Version Metadata Boundary
+  - 9.1.2 — Settings/About Runtime Version Integration
+  - 9.1.3 — Runtime Version Surface Test Coverage
+  - 9.1.close — Runtime App Version Surface Closure
 - 9.2 — Build Version & MSIX Synchronization Hardening
 - 9.3 — Theme Token Normalization
 - 9.4 — Light/Dark Theme Implementation

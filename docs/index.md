@@ -227,3 +227,12 @@ The Phase 9 baseline includes:
 - aligning Settings/About as the application identity and appearance control surface.
 
 Phase 9 is documented in `docs/phase9_scavium_wallet.md`. The next implementation subphase is 9.1 — Runtime App Version Surface.
+
+Phase 9.1 is now documented as a compact implementation sequence derived from the real Phase 9.0 ZIP:
+
+- 9.1.1 — Runtime Version Metadata Boundary
+- 9.1.2 — Settings/About Runtime Version Integration
+- 9.1.3 — Runtime Version Surface Test Coverage
+- 9.1.close — Runtime App Version Surface Closure
+
+This 9.1 planning does not implement code and does not generate `.agent/*` files. It only records the implementation boundaries that later code-only execution prompts can consume.
