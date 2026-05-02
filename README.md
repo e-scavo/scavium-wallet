@@ -59,7 +59,7 @@ Completed phases:
 Active Phase 9 work:
 - Phase 9.0 completed — Application Identity, Versioning, and Visual Theme Maturity documentation lock.
 - Phase 9.1 completed — Runtime App Version Surface.
-- Phase 9.2 active — Build Version & MSIX Synchronization Hardening; 9.2.1 completed the baseline inspection, 9.2.2/9.2.3 implemented build-tool hardening and focused validation, and 9.2.4 aligned release/development documentation ahead of closure.
+- Phase 9.2 closure validation executed — Build Version & MSIX Synchronization Hardening is functionally coherent through 9.2.4, but final closure remains blocked by source-controlled `pubspec.yaml` layout normalization for the MSIX metadata lines.
 
 
 Current Phase 8 milestone:
@@ -155,7 +155,7 @@ Planned Phase 9 identity and visual-theme maturity work includes:
   - 9.2.2 — Build Tool Version and MSIX Behavior Hardening — implemented
   - 9.2.3 — Build Version Validation Coverage — implemented
   - 9.2.4 — Release and Development Documentation Alignment — documented
-  - 9.2.close — Build Version & MSIX Synchronization Hardening Closure
+  - 9.2.close — Build Version & MSIX Synchronization Hardening Closure — validation executed; blocked pending `pubspec.yaml` MSIX layout normalization
 - 9.3 — Theme Token Normalization
 - 9.4 — Light/Dark Theme Implementation
 - 9.5 — Theme Mode Runtime Selection and Persistence
@@ -164,7 +164,7 @@ Planned Phase 9 identity and visual-theme maturity work includes:
 
 The closed Phase 8.6 state keeps release ownership concentrated in the existing surfaces: `tool/build.dart` owns local build automation, version/MSIX synchronization, artifact expectations, build summaries, and generated release reports; `.github/workflows/release.yml` owns tag/manual release validation, Android and Windows artifact jobs, versioned release assets, CI-generated release manifest, checksum generation, and draft GitHub Release publication; `pubspec.yaml` owns the project version and `msix_config.msix_version`; `docs/release.md` owns operator-facing release and distribution guidance.
 
-Phase 9 is now open as the next product-maturity phase. Phase 9.0 completed the documentation lock for application identity and visual-system consistency. Phase 9.1 then implemented the runtime app version surface: `package_info_plus` resolves package metadata, `lib/core/app_identity` owns the application version boundary, Settings/About consumes that boundary through Riverpod, and focused tests prove deterministic version formatting and provider override behavior. Phase 9.2 is now active as the compact implementation sequence for build-version baseline inspection, build-tool/MSIX behavior hardening, deterministic validation coverage, release/development documentation alignment, and closure. Its baseline contract remains that `pubspec.yaml` owns `version: 0.2.2+1`, `msix_config.msix_version` mirrors it as `0.2.2.1`, and `tool/build.dart` owns build-time interpretation, mutation, tag validation, and MSIX synchronization. The implemented 9.2.2/9.2.3 work keeps that boundary in `tool/build.dart` and adds `test/build_tool_version_test.dart` as focused validation coverage. 9.2.close must still verify the physical `pubspec.yaml` MSIX layout before the phase is declared closed. The remaining Phase 9 work then continues with SCAVIUM design token normalization, first-class light/dark themes, persisted theme-mode selection, and broader Settings/About alignment.
+Phase 9 is now open as the next product-maturity phase. Phase 9.0 completed the documentation lock for application identity and visual-system consistency. Phase 9.1 then implemented the runtime app version surface: `package_info_plus` resolves package metadata, `lib/core/app_identity` owns the application version boundary, Settings/About consumes that boundary through Riverpod, and focused tests prove deterministic version formatting and provider override behavior. Phase 9.2 has completed its implementation and documentation-alignment path through 9.2.4, and 9.2.close validation has now been executed against the real updated ZIP. The build/version behavior is coherent: `pubspec.yaml` owns `version: 0.2.2+1`, `msix_config.msix_version` mirrors it as `0.2.2.1`, and `tool/build.dart` owns build-time interpretation, mutation, tag validation, and MSIX synchronization. The implemented 9.2.2/9.2.3 work keeps that boundary in `tool/build.dart` and adds `test/build_tool_version_test.dart` as focused validation coverage. Final Phase 9.2 closure is intentionally not declared complete yet because static byte inspection still finds an embedded carriage return between `identity_name` and `msix_version` in `pubspec.yaml`; that metadata must be normalized onto separate auditable YAML lines before 9.3 starts. The remaining Phase 9 work then continues with SCAVIUM design token normalization, first-class light/dark themes, persisted theme-mode selection, and broader Settings/About alignment.
 
 
 

@@ -226,7 +226,7 @@ The Phase 9 baseline includes:
 - allowing runtime theme-mode selection and persistence;
 - aligning Settings/About as the application identity and appearance control surface.
 
-Phase 9 is documented in `docs/phase9_scavium_wallet.md`. Phase 9.1 is complete and Phase 9.2 — Build Version & MSIX Synchronization Hardening is active. Phase 9.2 is documented as a compact nested execution plan; 9.2.1 completed the baseline inspection, 9.2.2/9.2.3 implemented build-tool hardening and focused validation, and 9.2.4 aligns release/development documentation before closure.
+Phase 9 is documented in `docs/phase9_scavium_wallet.md`. Phase 9.1 is complete and Phase 9.2 — Build Version & MSIX Synchronization Hardening has been validated through 9.2.close. The implementation path is coherent through 9.2.4, but the phase remains pending final closure until the source-controlled `pubspec.yaml` MSIX metadata layout is normalized.
 
 Phase 9.1 closed the runtime version surface through the compact implementation sequence derived from the real Phase 9.0 ZIP:
 
@@ -243,7 +243,7 @@ Phase 9.2 is active as the next build-version hardening sequence derived from th
 - 9.2.2 — Build Tool Version and MSIX Behavior Hardening — implemented
 - 9.2.3 — Build Version Validation Coverage — implemented
 - 9.2.4 — Release and Development Documentation Alignment — documented
-- 9.2.close — Build Version & MSIX Synchronization Hardening Closure
+- 9.2.close — Build Version & MSIX Synchronization Hardening Closure — validation executed; closure blocked pending `pubspec.yaml` layout normalization
 
-This active sequence remains bounded to `tool/build.dart`, project version metadata, `test/build_tool_version_test.dart`, and release/development documentation. The 9.2 baseline confirms `pubspec.yaml` currently owns `version: 0.2.2+1`, `msix_config.msix_version` mirrors it as `0.2.2.1`, and `tool/build.dart` owns build-time interpretation, mutation, tag validation, and MSIX synchronization. 9.2.4 records that closure must still normalize or verify the physical `pubspec.yaml` MSIX layout because static ZIP inspection found `identity_name` and `msix_version` serialized on the same physical line. The sequence does not reopen runtime Settings/About version display completed in 9.1 and does not touch theme tokens, light/dark themes, wallet custody, account, asset, transaction, signing, backup, restore, diagnostics, routing, or release publication behavior.
+This sequence remains bounded to `tool/build.dart`, project version metadata, `test/build_tool_version_test.dart`, and release/development documentation. The 9.2 baseline confirms `pubspec.yaml` currently owns `version: 0.2.2+1`, `msix_config.msix_version` mirrors it as `0.2.2.1`, and `tool/build.dart` owns build-time interpretation, mutation, tag validation, and MSIX synchronization. The 9.2.close validation confirms the build-tool/test implementation is coherent and that no runtime, theme, wallet, asset, transaction, signing, backup, restore, diagnostics, routing, CI publication, Play Store upload, or Microsoft Store submission behavior was reopened. The only unresolved item is physical YAML layout: `identity_name` and `msix_version` must be normalized onto separate auditable lines before the phase can be marked complete and before 9.3 begins.
 

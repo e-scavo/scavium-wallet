@@ -200,7 +200,7 @@ Phase 9.2.2 and 9.2.3 then implemented that contract through the existing build 
 - Windows MSIX packaging synchronizes `msix_config.msix_version` from the resolved build version as `x.y.z.n`;
 - `test/build_tool_version_test.dart` is the focused validation surface for version parsing, tag normalization, bump/no-bump behavior, and MSIX derivation.
 
-Before 9.2 closes, the committed `pubspec.yaml` layout must also be visibly clean: `identity_name` and `msix_version` must appear as separate normal YAML lines while preserving the intended values `com.scavium.wallet` and `0.2.2.1` unless the closure intentionally bumps metadata.
+9.2.close validation confirms this behavior remains coherent, but the phase is not yet fully closable from the source-controlled ZIP because the committed `pubspec.yaml` layout is still not visibly clean: `identity_name` and `msix_version` are present with the intended values, but an embedded carriage return remains between them. Before declaring 9.2 complete, normalize those entries onto separate normal YAML lines while preserving `com.scavium.wallet` and `0.2.2.1` unless an intentional version bump is performed.
 
 Example:
 
@@ -606,6 +606,6 @@ Phase 9.2 is now documented as the implementation sequence that will handle this
 - 9.2.2 — Build Tool Version and MSIX Behavior Hardening;
 - 9.2.3 — Build Version Validation Coverage;
 - 9.2.4 — Release and Development Documentation Alignment;
-- 9.2.close — Build Version & MSIX Synchronization Hardening Closure.
+- 9.2.close — Build Version & MSIX Synchronization Hardening Closure — validation executed; blocked pending `pubspec.yaml` MSIX layout normalization.
 
 This is not a new release publication feature. It is an identity/version consistency hardening step over the existing release tooling baseline. Phase 9.1 does not change `tool/build.dart`, `.github/workflows/release.yml`, MSIX metadata, artifact naming, or publishing behavior; those boundaries remain for 9.2 implementation.
