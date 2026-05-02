@@ -5,6 +5,38 @@ import 'package:flutter_test/flutter_test.dart';
 import '../tool/build.dart' as build_tool;
 
 void main() {
+  group('readVersionInfo', () {
+    test('parses strict pubspec version format', () {
+      final pubspecFile = _writePubspec(version: '1.2.3+45');
+
+      final version = build_tool.readVersionInfo(pubspecFile);
+
+      expect(version.buildName, '1.2.3');
+      expect(version.buildNumber, 45);
+      expect(version.fullVersion, '1.2.3+45');
+    });
+  });
+
+  group('normalizeGitTag', () {
+    test('normalizes simple version tags', () {
+      expect(build_tool.normalizeGitTag('v1.2.3'), '1.2.3');
+    });
+
+    test('normalizes refs tag names', () {
+      expect(build_tool.normalizeGitTag('refs/tags/v1.2.3'), '1.2.3');
+    });
+
+    test('rejects tags without v prefix', () {
+      expect(build_tool.normalizeGitTag('1.2.3'), isNull);
+    });
+
+    test('rejects tags with invalid semantic versions', () {
+      expect(build_tool.normalizeGitTag('v1.2'), isNull);
+      expect(build_tool.normalizeGitTag('v1.2.3+4'), isNull);
+      expect(build_tool.normalizeGitTag('refs/tags/1.2.3'), isNull);
+    });
+  });
+
   group('resolveVersion', () {
     test('increments the build number when no override is provided', () {
       final pubspecFile = _writePubspec(version: '0.2.2+1');
