@@ -370,11 +370,13 @@ The product now has safer diagnostics, clearer signing and backup warning surfac
 
 ## 🎨 Phase 9 Application Identity and Theme Features
 
-Phase 9 is open to add identity and appearance maturity rather than new wallet transaction capabilities. Phase 9.0 completed the documentation lock and keeps the following capabilities planned for implementation subphases.
+Phase 9 is open to add identity and appearance maturity rather than new wallet transaction capabilities. Phase 9.0 completed the documentation lock and Phase 9.1 completed the runtime app version surface.
 
-Planned user-visible capabilities include:
+Implemented Phase 9.1 user-visible capability:
 
-- dynamic application version display in Settings/About;
+- dynamic application version display in Settings/About, resolved from runtime package metadata through the app identity boundary;
+
+Remaining planned user-visible capabilities include:
 - clearer version consistency between runtime UI, `pubspec.yaml`, release tooling, and MSIX metadata;
 - normalized SCAVIUM visual tokens;
 - first-class light and dark themes;
@@ -382,7 +384,11 @@ Planned user-visible capabilities include:
 - persisted appearance preference;
 - smoother Settings/About hierarchy for identity and appearance controls.
 
-Planned non-user-facing capabilities include:
+Implemented non-user-facing 9.1 capability:
+
+- centralized runtime version formatting and provider-based metadata resolution under `lib/core/app_identity`;
+
+Remaining planned non-user-facing capabilities include:
 
 - explicit validation of build/MSIX version synchronization;
 - reduced direct color coupling inside UI code;

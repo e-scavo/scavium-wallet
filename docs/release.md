@@ -554,13 +554,19 @@ Phase 8.6 closes with a clearer release evidence chain from local build executio
 
 ## 🧭 Phase 9 Version Identity Follow-Up
 
-Phase 8.6 closed the release/distribution tooling maturity layer. Phase 9 is open to follow that work by aligning the user-visible runtime version with the same project identity chain used by build and packaging flows. Phase 9.0 documents this boundary without changing release tooling.
+Phase 8.6 closed the release/distribution tooling maturity layer. Phase 9 is open to follow that work by aligning the user-visible runtime version with the same project identity chain used by build and packaging flows. Phase 9.0 documented this boundary without changing release tooling, and Phase 9.1 now implements the runtime Settings/About version surface without changing release publication behavior.
 
-The Phase 9 versioning follow-up remains expected to validate during implementation:
+The Phase 9 versioning follow-up now separates completed runtime identity work from remaining build/MSIX hardening.
 
-- whether Settings/About displays version data from runtime metadata instead of static copy;
+Completed in 9.1:
+
+- Settings/About displays version data from runtime package metadata instead of static copy;
+- the stale `Version 0.4.0` UI literal is removed from the runtime Settings surface;
+- tests validate version display through deterministic provider overrides rather than release artifacts.
+
+Remaining for later Phase 9 implementation:
 - whether `tool/build.dart` version bump behavior and `msix_config.msix_version` synchronization remain explicit;
 - whether `--no-version-bump` behavior is documented clearly enough that operators do not confuse intentional non-mutation with a synchronization failure;
 - whether runtime version display, `pubspec.yaml`, MSIX metadata, CI artifact naming, and release documentation remain conceptually aligned.
 
-This is not a new release publication feature. It is an identity/version consistency hardening step over the existing release tooling baseline. Phase 9.0 does not change `tool/build.dart`, `.github/workflows/release.yml`, MSIX metadata, artifact naming, or publishing behavior.
+This is not a new release publication feature. It is an identity/version consistency hardening step over the existing release tooling baseline. Phase 9.1 does not change `tool/build.dart`, `.github/workflows/release.yml`, MSIX metadata, artifact naming, or publishing behavior; those boundaries remain for 9.2.

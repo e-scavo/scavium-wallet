@@ -359,11 +359,11 @@ Future development phases must preserve the Phase 8.6 boundary unless a later ph
 
 ## Phase 9 Development Boundary
 
-Phase 9 development must remain bounded to application identity, versioning, and visual theme maturity. Phase 9.0 is complete as a documentation-only lock and does not modify code.
+Phase 9 development must remain bounded to application identity, versioning, and visual theme maturity. Phase 9.0 is complete as a documentation-only lock. Phase 9.1 is complete as the first implementation slice and introduces only the runtime app version surface.
 
 Expected implementation areas are:
 
-- runtime app version resolution and Settings/About display;
+- runtime app version resolution and Settings/About display — completed in 9.1 through `lib/core/app_identity`, `package_info_plus`, and Settings provider integration;
 - build tool validation or hardening around `pubspec.yaml` and `msix_config.msix_version`;
 - SCAVIUM design token normalization inside the app theme layer;
 - light and dark theme implementation;
@@ -379,6 +379,12 @@ Development rules:
 - continue using `fvm flutter analyze` and `fvm flutter test` as the baseline validation commands.
 
 Build/version hardening in Phase 9 should document whether a command mutates `pubspec.yaml`, synchronizes MSIX metadata, or intentionally leaves version data unchanged because `--no-version-bump` was requested.
+
+### Phase 9.1 Runtime Version Surface
+
+Phase 9.1 establishes the first concrete Phase 9 development pattern: keep application identity behind a narrow boundary and test UI behavior through provider overrides rather than machine-local package metadata.
+
+The implemented runtime version surface uses `AppVersionInfo` for display formatting and `appVersionInfoProvider` for Settings/About consumption. Development of later Settings/About work should preserve this boundary instead of reintroducing direct package metadata reads into UI widgets.
 
 ### Phase 9.0 Documentation Lock
 

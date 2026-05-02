@@ -23,7 +23,7 @@ Current platform and release scope includes:
 - Windows MSIX packaging
 - GitHub Release automation
 
-The wallet completed Phase 7 stabilization and Phase 8 product expansion and production maturity. Phase 8.5 security, reliability, and diagnostics maturity extended the expanded wallet surface with safer diagnostics, clearer signing and backup warnings, centralized lifecycle/lock reliability, and normalized invalid-state handling. Phase 8.6 release and distribution maturity closed the release-tooling extension with clearer artifact reporting, CI release metadata, checksum boundaries, and manual distribution expectations. Phase 9 is now open as the application identity, versioning, and visual theme maturity phase.
+The wallet completed Phase 7 stabilization and Phase 8 product expansion and production maturity. Phase 8.5 security, reliability, and diagnostics maturity extended the expanded wallet surface with safer diagnostics, clearer signing and backup warnings, centralized lifecycle/lock reliability, and normalized invalid-state handling. Phase 8.6 release and distribution maturity closed the release-tooling extension with clearer artifact reporting, CI release metadata, checksum boundaries, and manual distribution expectations. Phase 9 is now open as the application identity, versioning, and visual theme maturity phase. Phase 9.1 closed the first visible identity gap by moving Settings/About from stale hardcoded version copy to dynamic runtime package metadata through a controlled app identity boundary.
 
 Phase 8 focuses on controlled product growth from the Phase 7 release-hardened baseline, including:
 
@@ -58,7 +58,8 @@ Completed phases:
 
 Active Phase 9 work:
 - Phase 9.0 completed — Application Identity, Versioning, and Visual Theme Maturity documentation lock.
-- Phase 9.1 planned — Runtime App Version Surface.
+- Phase 9.1 completed — Runtime App Version Surface.
+- Phase 9.2 next — Build Version & MSIX Synchronization Hardening.
 
 
 Current Phase 8 milestone:
@@ -144,7 +145,7 @@ Phase 8.6 completed as a release-tooling and distribution-documentation maturity
 Planned Phase 9 identity and visual-theme maturity work includes:
 
 - 9.0 — Phase Definition & Documentation Lock (completed)
-- 9.1 — Runtime App Version Surface
+- 9.1 — Runtime App Version Surface (completed)
   - 9.1.1 — Runtime Version Metadata Boundary
   - 9.1.2 — Settings/About Runtime Version Integration
   - 9.1.3 — Runtime Version Surface Test Coverage
@@ -158,7 +159,7 @@ Planned Phase 9 identity and visual-theme maturity work includes:
 
 The closed Phase 8.6 state keeps release ownership concentrated in the existing surfaces: `tool/build.dart` owns local build automation, version/MSIX synchronization, artifact expectations, build summaries, and generated release reports; `.github/workflows/release.yml` owns tag/manual release validation, Android and Windows artifact jobs, versioned release assets, CI-generated release manifest, checksum generation, and draft GitHub Release publication; `pubspec.yaml` owns the project version and `msix_config.msix_version`; `docs/release.md` owns operator-facing release and distribution guidance.
 
-Phase 9 is now open as the next product-maturity phase. Phase 9.0 completed the documentation lock for application identity and visual-system consistency: dynamic runtime version display, explicit build/MSIX version synchronization hardening, SCAVIUM design token normalization, first-class light/dark themes, persisted theme-mode selection, and Settings/About alignment.
+Phase 9 is now open as the next product-maturity phase. Phase 9.0 completed the documentation lock for application identity and visual-system consistency. Phase 9.1 then implemented the runtime app version surface: `package_info_plus` resolves package metadata, `lib/core/app_identity` owns the application version boundary, Settings/About consumes that boundary through Riverpod, and focused tests prove deterministic version formatting and provider override behavior. The remaining Phase 9 work continues with explicit build/MSIX version synchronization hardening, SCAVIUM design token normalization, first-class light/dark themes, persisted theme-mode selection, and broader Settings/About alignment.
 
 
 
@@ -179,6 +180,7 @@ Phase 9 is now open as the next product-maturity phase. Phase 9.0 completed the 
 - generated release reports, CI release manifest, and SHA256 checksum publication
 - draft GitHub Release publication with attached assets
 - controlled Phase 8 product expansion path
+- dynamic runtime app version display in Settings/About
 
 ---
 
