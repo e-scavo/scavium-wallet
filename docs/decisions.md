@@ -344,3 +344,10 @@ The decision for 9.3 is to stabilize the SCAVIUM token vocabulary first: brand, 
 
 This prevents light mode, theme persistence, and Settings appearance controls from being built on scattered screen-level color edits.
 
+### 29. Phase 9.3.1 token ownership lives under `lib/app/theme/tokens/`
+
+Phase 9.3.1 closes the naming-contract decision by creating a dedicated token namespace rather than expanding `AppColors` as the canonical owner. The canonical token files are `scavo_colors.dart`, `scavo_spacing.dart`, `scavo_radius.dart`, `scavo_elevation.dart`, `scavo_typography.dart`, and `scavo_tokens.dart`.
+
+`AppColors` and `AppTextStyles` remain compatibility facades so existing consumers do not break while later 9.3 subphases adopt the token vocabulary more broadly. `AppTheme.darkTheme` consumes token names, but runtime behavior remains dark-only and `ThemeMode.dark` remains unchanged until the dedicated light/dark and persistence phases.
+
+This decision keeps visual intent semantic and app-owned: brand, surface, text, semantic state, interaction, spacing, radius, elevation, and typography values should be extended through the token namespace rather than through scattered screen-level constants.

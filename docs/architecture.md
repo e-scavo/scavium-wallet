@@ -478,9 +478,9 @@ The SCAVIUM Design Token System locked in Phase 9.0 establishes brand, backgroun
 
 ### Phase 9.3 Theme Token Boundary
 
-Phase 9.3 is now documented as the token-foundation step for the visual architecture. The current code keeps theme ownership under `lib/app/theme`, with `AppColors`, `AppTextStyles`, and `AppTheme.darkTheme` as the active dark-only surface. The 9.3 implementation must preserve that centralized boundary while normalizing the vocabulary into SCAVIUM token families.
+Phase 9.3 is now active as the token-foundation step for the visual architecture, and 9.3.1 closes the first concrete boundary decision. Theme ownership remains under `lib/app/theme`, but token ownership is now explicit under `lib/app/theme/tokens/`. The baseline namespace contains `ScavoColors`, `ScavoSpacing`, `ScavoRadius`, `ScavoElevation`, `ScavoTypography`, and the `scavo_tokens.dart` barrel export.
 
-The architectural rule for 9.3 is that token ownership belongs to the app theme layer, not to individual screens. Shared widgets may adopt renamed or normalized tokens, but wallet domain modules, repositories, controllers, routes, release tooling, and CI workflows remain outside the token-normalization boundary.
+The architectural rule for 9.3 is that token ownership belongs to the app theme layer, not to individual screens. `AppColors` and `AppTextStyles` are now compatibility facades over the token namespace, and `AppTheme.darkTheme` consumes token names while preserving the existing dark-only runtime surface. Shared widgets may adopt normalized tokens in later 9.3 work, but wallet domain modules, repositories, controllers, routes, release tooling, and CI workflows remain outside the token-normalization boundary.
 
-Phase 9.3 may introduce `lib/app/theme/app_theme_tokens.dart` only if that file makes token-family ownership clearer than keeping the model inside `AppColors`. It must not introduce light-mode runtime behavior; that remains a Phase 9.4/9.5 responsibility.
+Phase 9.3.1 did not introduce light-mode runtime behavior; that remains a Phase 9.4/9.5 responsibility. Future theme work should extend the token namespace rather than reintroducing scattered screen-level colors or component-specific magic values.
 

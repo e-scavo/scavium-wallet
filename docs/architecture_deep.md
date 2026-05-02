@@ -267,6 +267,12 @@ This keeps Phase 9 visually meaningful while preserving the existing controller/
 
 ## Phase 9.3 Theme Token Deep Boundary
 
-The Phase 9.3 plan keeps token normalization inside the existing app theme architecture. The current concrete baseline is `AppColors` plus `AppTextStyles` plus `AppTheme.darkTheme`; the planned implementation may keep those names or introduce `app_theme_tokens.dart`, but it must leave a single canonical token vocabulary for later light/dark theme construction.
+The Phase 9.3 plan keeps token normalization inside the existing app theme architecture. Phase 9.3.1 closes the concrete baseline by rooting token ownership in `lib/app/theme/tokens/` while preserving `AppColors`, `AppTextStyles`, and `AppTheme.darkTheme` as the existing app-theme entry points.
 
 This boundary matters because later Phase 9 work depends on predictable token semantics. Light mode should derive from the same token language rather than from a second palette copied into screens, and theme-mode persistence should select between app-level themes rather than rewrite widget colors directly.
+
+### Phase 9.3.1 Token Namespace Closure
+
+Phase 9.3.1 converts the visual-token plan into a concrete app-theme boundary. The token namespace is now rooted at `lib/app/theme/tokens/` and split by visual intent instead of by individual component: `scavo_colors.dart` owns semantic color intent, `scavo_spacing.dart` owns the compact layout scale, `scavo_radius.dart` owns shape scale, `scavo_elevation.dart` owns elevation scale, `scavo_typography.dart` owns Inter-backed text styles, and `scavo_tokens.dart` exports the namespace for theme-layer consumers.
+
+This boundary is intentionally conservative. `AppColors` and `AppTextStyles` remain available as compatibility facades so existing screens and shared widgets can migrate incrementally. `AppTheme.darkTheme` already consumes the token namespace, but the application still remains dark-only at runtime until the later Phase 9 light/dark and theme-mode subphases.

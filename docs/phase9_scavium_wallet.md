@@ -973,45 +973,63 @@ The following nested subphases are derived from the real Phase 9.2 ZIP and are i
 
 #### Objective
 
-Inventory the existing theme constants and lock the token naming contract before changing code.
+Inventory the existing theme constants and lock the token naming contract before changing broad visual behavior.
 
 #### Scope
 
 - Inspect current theme ownership in `lib/app/theme/app_colors.dart`, `lib/app/theme/app_text_styles.dart`, and `lib/app/theme/app_theme.dart`.
 - Inspect direct consumers under `lib/shared/widgets` and any screen-level color usage that could conflict with token normalization.
 - Map current dark-oriented constants to the Phase 9 token families: brand, background, surface, border/divider, text, semantic, interaction, shape, spacing, and elevation.
-- Decide whether `AppColors` remains the token owner or whether a dedicated token file is required.
-- Avoid modifying screens during the inventory step unless the implementation combines inventory and refactor in a single approved code pass.
+- Establish the concrete token namespace required by 9.3.2, 9.3.3, and the later light/dark work.
+- Preserve existing screen behavior and avoid broad per-screen refactors during the baseline step.
 
 #### State
 
-New planned nested subphase.
+Closed implementation subphase.
 
-#### Existing Files Tentatively Intervenable
+The real Phase 9.3.1 implementation introduces the baseline SCAVIUM token namespace under `lib/app/theme/tokens/` and keeps the existing public app-theme facade compatible. The subphase creates semantic token owners for colors, spacing, radius, elevation, and typography, exports them through `scavo_tokens.dart`, rewires `AppColors`, `AppTextStyles`, and `AppTheme.darkTheme` to consume those token names, and adds focused token-contract coverage in `test/app_theme_tokens_test.dart`.
 
-- `lib/app/theme/app_colors.dart` — baseline token source and likely naming-contract target.
-- `lib/app/theme/app_text_styles.dart` — text-token consumer and typography/color coupling point.
-- `lib/app/theme/app_theme.dart` — Material 3 theme consumer of token values.
-- `lib/shared/widgets/scavium_primary_button.dart` — direct brand/action color consumer.
-- `lib/shared/widgets/scavium_secondary_button.dart` — direct border/action color consumer.
-- `lib/shared/widgets/section_title.dart` — indirect text-token consumer.
-- `lib/shared/widgets/scavium_card.dart` — shared surface component to inspect for token fit.
-- `lib/shared/widgets/scavium_text_field.dart` — shared input component to inspect for token fit.
-- `docs/phase9_scavium_wallet.md` — record final inventory/naming result if this subphase is executed separately.
+9.3.1 deliberately remains a foundation step. It does not expose light mode, does not change `themeMode`, does not persist appearance preferences, does not alter Settings controls, and does not perform a screen-by-screen visual redesign.
 
-#### New Files Tentatively Creatable
+#### Existing Files Intervened
 
-None expected for inventory alone.
+- `lib/app/theme/app_colors.dart` — converted into a backwards-compatible color facade over `ScavoColors` so existing consumers remain stable while new work can use semantic token names.
+- `lib/app/theme/app_text_styles.dart` — converted into a backwards-compatible typography facade over `ScavoTypography` so existing text consumers keep their current API.
+- `lib/app/theme/app_theme.dart` — rewired the current dark `ThemeData` to consume token names for scaffold, color scheme, text theme, app bar, card, and input decoration values while preserving dark-only runtime behavior.
+
+#### New Files Created
+
+- `lib/app/theme/tokens/scavo_colors.dart` — semantic color token owner for brand, background, surface, text, border/divider, semantic state, interaction, overlay, and transparent values.
+- `lib/app/theme/tokens/scavo_spacing.dart` — compact non-component spacing scale used as the layout baseline for later adoption.
+- `lib/app/theme/tokens/scavo_radius.dart` — shape radius scale for SCAVIUM surfaces and controls.
+- `lib/app/theme/tokens/scavo_elevation.dart` — elevation scale documenting the current mostly-flat SCAVIUM visual posture.
+- `lib/app/theme/tokens/scavo_typography.dart` — typography token owner backed by Inter and semantic text-color intent.
+- `lib/app/theme/tokens/scavo_tokens.dart` — barrel export for the token namespace.
+- `test/app_theme_tokens_test.dart` — focused contract test that validates legacy facade mappings and non-component token scale ordering.
 
 #### Technical Justification
 
-The existing theme surface is small enough to preserve, but token naming must be locked before refactoring. This avoids renaming constants twice and prevents 9.4 from building light/dark themes on unstable vocabulary.
+The existing theme surface was small enough to preserve, but token naming needed to be locked before deeper refactoring. The implemented structure avoids renaming constants twice, prevents 9.4 from building light/dark themes on unstable vocabulary, and gives the rest of Phase 9 a concrete owner for visual intent.
 
-#### Expected Validations
+The naming contract is intentionally semantic and medium-high in granularity. Tokens describe UI intent rather than raw color names or component-specific values: brand colors remain distinct from semantic state colors, surfaces are separated from backgrounds, text colors are named by hierarchy, and spacing/radius/elevation scales stay compact enough to avoid a new token for every component.
 
-- Confirm no broad screen redesign is introduced.
-- Confirm token naming covers all existing `AppColors` usages.
-- Confirm 9.3 remains independent from theme-mode persistence and Settings controls.
+#### Validations Performed
+
+- Confirmed token naming is semantic rather than raw color-name driven.
+- Confirmed 9.3.1 did not perform screen-level visual refactor work.
+- Confirmed 9.3.1 remains independent from theme-mode persistence and Settings controls.
+- Confirmed the token owner is compatible with `AppTheme.darkTheme` and later light/dark theme work.
+- Confirmed the implementation preserves existing `AppColors` and `AppTextStyles` facade names for incremental adoption.
+- Added focused token contract coverage in `test/app_theme_tokens_test.dart`.
+- `dart`, `flutter`, and `fvm` were not available in the closure environment, so `fvm flutter analyze` and `fvm flutter test` must be executed in the project development environment before merging if they were not already executed by the implementation agent.
+
+#### 9.3.1 Closure Result
+
+Phase 9.3.1 is closed as the token baseline and naming-contract implementation.
+
+The closed state establishes `lib/app/theme/tokens/` as the concrete SCAVIUM token namespace for the rest of Phase 9. `AppColors` and `AppTextStyles` now act as compatibility facades over the token model, while `AppTheme.darkTheme` consumes tokens directly. This allows 9.3.2 and 9.3.3 to continue hardening token usage without breaking existing screens or forcing a broad visual rewrite.
+
+No light theme, runtime theme selector, persisted preference, Settings appearance control, release behavior, version behavior, wallet custody flow, signing flow, backup/restore behavior, diagnostics behavior, routing behavior, CI workflow, generated artifact, or `.agent/*` artifact is introduced by 9.3.1.close.
 
 ---
 
@@ -1300,4 +1318,4 @@ Status: Active.
 
 Phase 9 is opened as the active next phase after Phase 8.6 closure. It is not a continuation of release/distribution implementation, but it depends on the Phase 8.6 versioning and release-tooling baseline.
 
-Phase 9.0 is complete as the phase definition and documentation lock. Phase 9.1 is complete as the runtime application version surface: Settings/About now displays dynamic runtime metadata through `lib/core/app_identity` instead of hardcoded UI copy. Phase 9.2 is closed as the build-version and MSIX synchronization hardening sequence. Phase 9.3 is now documented as the next executable implementation sequence: 9.3.1 locks the token baseline and naming contract, 9.3.2 implements the core SCAVIUM token model, 9.3.3 adopts tokens in `ThemeData` and shared widgets, and 9.3.4 closes the token documentation and implementation record.
+Phase 9.0 is complete as the phase definition and documentation lock. Phase 9.1 is complete as the runtime application version surface: Settings/About now displays dynamic runtime metadata through `lib/core/app_identity` instead of hardcoded UI copy. Phase 9.2 is closed as the build-version and MSIX synchronization hardening sequence. Phase 9.3 is now active as the token-first visual-system implementation sequence. Phase 9.3.1 is closed: `lib/app/theme/tokens/` now owns the baseline SCAVIUM token namespace, `AppColors` and `AppTextStyles` remain compatibility facades, `AppTheme.darkTheme` consumes token names, and focused token contract coverage exists in `test/app_theme_tokens_test.dart`. The next executable implementation subphase is 9.3.2 — Core SCAVIUM Token Model Implementation.
