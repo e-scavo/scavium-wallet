@@ -1474,7 +1474,7 @@ Allow the user to select theme behavior and persist the selection locally, using
 
 ### State
 
-Planned. The real Phase 9.4-completed ZIP confirms that 9.5 is not yet implemented: `lib/app/app.dart` still hardcodes `themeMode: ThemeMode.dark` and passes only `theme: AppTheme.darkTheme`; no runtime theme-mode controller, theme preference domain, persistence key, Settings appearance selector, or theme-mode tests exist yet.
+Closed. Phase 9.5 is implemented and documented as the runtime theme-mode selection and persistence bridge over the 9.4 paired-theme contract. The real 9.5.2–9.5.4 implementation introduces a bounded `system` / `light` / `dark` preference model, local persistence through the existing storage boundary, a Riverpod controller, reactive app-root wiring through `MaterialApp.router`, and a compact Settings Appearance selector. The implementation does not redesign tokens, palettes, component themes, wallet flows, signing, backup, diagnostics, routing, build tooling, release tooling, CI, or generated artifacts.
 
 ### Existing Files Tentatively Intervenable
 
@@ -1595,7 +1595,7 @@ Introduce the local preference model and persistence boundary for `system`, `lig
 
 #### State
 
-New planned nested subphase.
+Closed as code-only implementation by the agent workflow. The real 9.5.2 implementation added the theme-mode preference model, centralized storage key, repository abstraction, repository implementation, provider wiring, and focused preference/repository tests without changing theme tokens or product flows.
 
 #### Existing Files Tentatively Intervenable
 
@@ -1639,7 +1639,7 @@ Wire the persisted theme-mode preference into `ScaviumWalletApp` so runtime sele
 
 #### State
 
-New planned nested subphase.
+Closed as code-only implementation by the agent workflow. The real 9.5.3 implementation added the Riverpod `ThemeModeController` boundary and changed the app root from forced dark behavior to provider-driven runtime selection using `theme: AppTheme.lightTheme`, `darkTheme: AppTheme.darkTheme`, and the selected Flutter `ThemeMode`.
 
 #### Existing Files Tentatively Intervenable
 
@@ -1683,7 +1683,7 @@ Expose the runtime theme-mode preference through Settings without turning 9.5 in
 
 #### State
 
-New planned nested subphase.
+Closed as code-only implementation by the agent workflow. The real 9.5.4 implementation added a bounded Settings Appearance section and extracted `ThemeModeSelector` as a compact widget, preserving the existing Security & recovery, Signing, Diagnostics, Danger zone, and About surfaces.
 
 #### Existing Files Tentatively Intervenable
 
@@ -1725,7 +1725,7 @@ Close 9.5 by validating the implemented preference flow and documenting the fina
 
 #### State
 
-New planned nested subphase.
+Closed as documentation-only validation and documentation closure from the real 9.5.1–9.5.4 updated ZIP.
 
 #### Existing Files Tentatively Intervenable
 
@@ -1740,6 +1740,37 @@ New planned nested subphase.
 #### New Files Tentatively Creatable
 
 None expected for documentation closure.
+
+
+#### Execution Record
+
+Phase 9.5.5 was executed as the documentation-only closure after the real 9.5.2–9.5.4 code-only agent implementation. The implementation was validated from the updated ZIP before this documentation pass. The resulting runtime appearance boundary is now complete for Phase 9.5:
+
+- `lib/app/theme/theme_mode_preference.dart` owns the supported preference values `system`, `light`, and `dark`, their stable storage strings, user-facing labels/descriptions, safe fallback behavior, and mapping to Flutter `ThemeMode`.
+- `lib/core/constants/storage_keys.dart` owns the persisted `theme_mode_preference` key alongside the existing centralized local-storage keys.
+- `lib/app/theme/theme_mode_repository.dart` defines the preference persistence contract, while `lib/app/theme/theme_mode_repository_impl.dart` implements it through `LocalStorageService` rather than direct UI/app-root storage access.
+- `lib/core/providers/service_providers.dart` exposes `themeModeRepositoryProvider` through the existing provider boundary.
+- `lib/app/theme/theme_mode_controller.dart` owns the Riverpod state boundary for loading, exposing, updating, and persisting the selected preference with a safe fallback while local storage resolves.
+- `lib/app/app.dart` now consumes `themeModeControllerProvider` and applies `theme: AppTheme.lightTheme`, `darkTheme: AppTheme.darkTheme`, and the selected `themeMode` at `MaterialApp.router`.
+- `lib/features/settings/presentation/settings_screen.dart` exposes an Appearance section before the existing security, signing, diagnostics, danger-zone, and about sections.
+- `lib/features/settings/presentation/widgets/theme_mode_selector.dart` owns the compact `SegmentedButton<ThemeModePreference>` UI for the appearance preference.
+- `test/theme_mode_preference_test.dart`, `test/theme_mode_controller_test.dart`, `test/theme_mode_selector_test.dart`, and the updated `test/settings_screen_test.dart` provide focused coverage for serialization, fallback behavior, persistence, controller state, selector state, and Settings integration.
+
+The final 9.5 implementation preserves the 9.4 theme-construction contract. It selects between `AppTheme.lightTheme` and `AppTheme.darkTheme`; it does not rewrite `ScavoThemeColors`, token values, component themes, shared visual widgets, route ownership, wallet state, signing flows, backup/restore flows, diagnostics, lifecycle/lock behavior, build tooling, release tooling, CI, or generated artifacts.
+
+The theme-mode preference is intentionally local-only. It is stored on the device through the existing local storage abstraction, is not synced remotely, and does not introduce analytics, telemetry, remote configuration, account metadata, or white-label customization. Settings owns only the user interaction; serialization and persistence remain below the app theme boundary, and app-root wiring remains the single place where Flutter theme mode is applied.
+
+This closes 9.5 as the runtime selection and persistence bridge between the 9.4 paired-theme implementation and the later `9.6 — Settings and About UX Alignment` polish phase. Phase 9.6 can now improve Settings/About hierarchy around an already-implemented appearance preference rather than reworking theme-mode ownership.
+
+#### Documentation Validation
+
+- Read all non-agent Markdown trunk documents in the ZIP before intervention: `README.md`, `privacy.md`, `tyc.md`, `docs/*.md`, and `ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md`.
+- Validated the real code implementation for 9.5.2–9.5.4 before documenting closure.
+- Confirmed `MaterialApp.router` no longer hardcodes dark-only runtime behavior and now receives both paired themes plus the selected `ThemeMode`.
+- Confirmed the preference model supports `system`, `light`, and `dark` with safe fallback behavior.
+- Confirmed persistence reuses `LocalStorageService` and centralized `StorageKeys` rather than introducing direct `SharedPreferences` access in UI.
+- Confirmed Settings exposes Appearance through a bounded selector without altering unrelated Settings actions.
+- Confirmed no token, palette, component-theme, wallet, signing, backup, diagnostics, routing, build, release, CI, generated-artifact, or `.agent/*` ownership was changed by this documentation closure.
 
 #### Technical Justification
 
@@ -1817,7 +1848,7 @@ Close Phase 9 by validating that runtime identity, build-version consistency, an
 3. Harden 9.2 build/MSIX behavior while version ownership is fresh.
 4. Normalize 9.3 design tokens before adding light mode.
 5. Phase 9.4 light/dark theme implementation is complete.
-6. Implement 9.5 theme selection and persistence.
+6. Phase 9.5 theme selection and persistence is complete.
 7. Polish 9.6 Settings/About UX alignment.
 8. Close with 9.close documentation and validation.
 
@@ -1849,4 +1880,4 @@ Status: Active.
 
 Phase 9 is opened as the active next phase after Phase 8.6 closure. It is not a continuation of release/distribution implementation, but it depends on the Phase 8.6 versioning and release-tooling baseline.
 
-Phase 9.0 is complete as the phase definition and documentation lock. Phase 9.1 is complete as the runtime application version surface: Settings/About now displays dynamic runtime metadata through `lib/core/app_identity` instead of hardcoded UI copy. Phase 9.2 is closed as the build-version and MSIX synchronization hardening sequence. Phase 9.3 is closed as the token-first visual-system foundation. Phase 9.4 is closed as the light/dark theme implementation bridge. `lib/app/theme/tokens/` owns the SCAVIUM token namespace, `ScavoThemeColors` owns the mode-specific light/dark color boundary, `AppColors` and `AppTextStyles` remain compatibility facades, `AppTheme.darkTheme` and `AppTheme.lightTheme` are built from the same centralized theme path, shared visual widgets rely on theme-owned values, and focused token/theme coverage exists in `test/app_theme_tokens_test.dart`. 9.5.1 is closed as the documentation-only runtime-boundary baseline for theme-mode selection and persistence. The next executable implementation subphase is 9.5.2 — Theme Mode Preference Model and Local Persistence.
+Phase 9.0 is complete as the phase definition and documentation lock. Phase 9.1 is complete as the runtime application version surface: Settings/About now displays dynamic runtime metadata through `lib/core/app_identity` instead of hardcoded UI copy. Phase 9.2 is closed as the build-version and MSIX synchronization hardening sequence. Phase 9.3 is closed as the token-first visual-system foundation. Phase 9.4 is closed as the light/dark theme implementation bridge. Phase 9.5 is closed as the runtime theme-mode selection and persistence bridge. `lib/app/theme/tokens/` owns the SCAVIUM token namespace, `ScavoThemeColors` owns the mode-specific light/dark color boundary, `AppColors` and `AppTextStyles` remain compatibility facades, `AppTheme.darkTheme` and `AppTheme.lightTheme` are built from the same centralized theme path, shared visual widgets rely on theme-owned values, `ThemeModePreference` owns `system`/`light`/`dark` preference semantics, `ThemeModeController` owns runtime preference state, `LocalThemeModeRepository` persists the selection locally, `MaterialApp.router` applies the selected mode reactively, and Settings exposes the bounded Appearance selector. The next executable implementation phase is 9.6 — Settings and About UX Alignment.

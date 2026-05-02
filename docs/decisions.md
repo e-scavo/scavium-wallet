@@ -357,3 +357,19 @@ This decision keeps visual intent semantic and app-owned: brand, surface, text, 
 Phase 9.3 finalizes the token-normalization decision as implemented architecture. The canonical namespace is `lib/app/theme/tokens/`, not a screen-level palette and not a feature-module concern. `ScavoColors`, `ScavoSpacing`, `ScavoRadius`, `ScavoElevation`, and `ScavoTypography` own visual intent, while `scavo_tokens.dart` exports the namespace for theme-layer consumers.
 
 `AppColors` and `AppTextStyles` remain compatibility facades so existing UI can migrate incrementally, and shared visual widgets may consume tokens directly where doing so reduces magic values without changing product behavior. This decision preserves dark-only runtime behavior until Phase 9.4/9.5 and prevents later light/dark work from creating a second visual vocabulary.
+
+
+### 31. Theme mode selection is app-root state with local persistence
+
+Phase 9.5 finalizes theme-mode selection as application-level runtime state, not as Settings-only widget state and not as a token-construction concern.
+
+The decision is that `ThemeModePreference` owns the supported values `system`, `light`, and `dark`; `LocalThemeModeRepository` persists the stable string value through the existing local storage boundary; `ThemeModeController` owns reactive Riverpod state; and `ScaviumWalletApp` applies the selected Flutter `ThemeMode` at `MaterialApp.router` using the paired `AppTheme.lightTheme` and `AppTheme.darkTheme` definitions.
+
+Benefits:
+
+- Settings remains a thin interaction surface;
+- app-root wiring remains the only runtime theme application point;
+- token/theme construction remains centralized under `lib/app/theme`;
+- missing or invalid stored values have a safe fallback;
+- the preference remains local-only and privacy-preserving;
+- future Settings/About polish can refine presentation without reworking preference ownership.

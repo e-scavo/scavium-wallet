@@ -226,7 +226,7 @@ The Phase 9 baseline includes:
 - allowing runtime theme-mode selection and persistence;
 - aligning Settings/About as the application identity and appearance control surface.
 
-Phase 9 is documented in `docs/phase9_scavium_wallet.md`. Phase 9.1 is complete, Phase 9.2 — Build Version & MSIX Synchronization Hardening is closed, Phase 9.3 — Theme Token Normalization is closed as the compact token-foundation sequence, and Phase 9.4 — Light/Dark Theme Implementation is closed as the paired-theme implementation bridge. The SCAVIUM token namespace is implemented under `lib/app/theme/tokens/`, `ScavoThemeColors` owns the mode-specific light/dark color boundary, compatibility facades remain stable, shared visual widgets consume theme-owned values, and Phase 9.5 is now documented as the planned runtime selection and persistence sequence.
+Phase 9 is documented in `docs/phase9_scavium_wallet.md`. Phase 9.1 is complete, Phase 9.2 — Build Version & MSIX Synchronization Hardening is closed, Phase 9.3 — Theme Token Normalization is closed as the compact token-foundation sequence, Phase 9.4 — Light/Dark Theme Implementation is closed as the paired-theme implementation bridge, and Phase 9.5 — Theme Mode Runtime Selection and Persistence is closed as the runtime preference bridge. The SCAVIUM token namespace is implemented under `lib/app/theme/tokens/`, `ScavoThemeColors` owns the mode-specific light/dark color boundary, compatibility facades remain stable, shared visual widgets consume theme-owned values, `ThemeModePreference` owns `system` / `light` / `dark`, `ThemeModeController` owns reactive state, and Settings exposes the bounded Appearance selector.
 
 Phase 9.1 closed the runtime version surface through the compact implementation sequence derived from the real Phase 9.0 ZIP:
 
@@ -263,15 +263,15 @@ Phase 9.4 is closed as the light/dark theme implementation bridge after the 9.3 
 - 9.4.3 — Component and Navigation Theme Coherence — closed/code-only
 - 9.4.4 — Light/Dark Theme Validation and Documentation Closure — closed
 
-The closed 9.4 result adds first-class paired light/dark theme definitions from the token namespace while preserving the 9.3 dark visual contract. `AppTheme.darkTheme` and `AppTheme.lightTheme` are produced through the same centralized theme builder, `ScavoThemeColors.dark` maps to the normalized dark token values, `ScavoThemeColors.light` owns the light palette, and focused theme tests validate both definitions. Shared cards, buttons, Settings section cards, snackbars, dialogs, and responsive navigation rely on theme-owned values rather than screen-local light/dark branches. The app root still keeps runtime behavior dark-only, leaving user selection, persistence, system-mode handling, and Settings appearance controls to the now-documented 9.5/9.6 sequence.
+The closed 9.4 result adds first-class paired light/dark theme definitions from the token namespace while preserving the 9.3 dark visual contract. `AppTheme.darkTheme` and `AppTheme.lightTheme` are produced through the same centralized theme builder, `ScavoThemeColors.dark` maps to the normalized dark token values, `ScavoThemeColors.light` owns the light palette, and focused theme tests validate both definitions. Shared cards, buttons, Settings section cards, snackbars, dialogs, and responsive navigation rely on theme-owned values rather than screen-local light/dark branches. Phase 9.5 now applies that paired-theme contract at runtime: the app root consumes a persisted `system` / `light` / `dark` preference and Settings exposes the Appearance selector without changing token ownership.
 
-Phase 9.5 is planned as the runtime selection and persistence sequence over the 9.4 paired-theme contract:
+Phase 9.5 is closed as the runtime selection and persistence sequence over the 9.4 paired-theme contract:
 
 - 9.5.1 — Theme Mode Baseline and Runtime Boundary — closed/documentation-only
-- 9.5.2 — Theme Mode Preference Model and Local Persistence — planned
-- 9.5.3 — Reactive App Root Theme Mode Wiring — planned
-- 9.5.4 — Settings Appearance Selector and UX Integration — planned
-- 9.5.5 — Theme Mode Runtime Selection Validation and Documentation Closure — planned
+- 9.5.2 — Theme Mode Preference Model and Local Persistence — closed/code-only
+- 9.5.3 — Reactive App Root Theme Mode Wiring — closed/code-only
+- 9.5.4 — Settings Appearance Selector and UX Integration — closed/code-only
+- 9.5.5 — Theme Mode Runtime Selection Validation and Documentation Closure — closed/documentation-only
 
-The 9.5 plan is intentionally bounded: it should model and persist `system`/`light`/`dark`, wire the selected mode into `MaterialApp.router`, expose a compact Settings appearance selector, and validate the flow without changing theme token ownership, wallet behavior, release tooling, or the broader Settings/About polish reserved for 9.6. Phase 9.5.1 is closed as the documentation-only boundary gate from the real updated ZIP: `lib/app/app.dart` still forces `ThemeMode.dark`, `AppTheme.lightTheme` and `AppTheme.darkTheme` are available from the 9.4 paired-theme contract, and existing local storage boundaries are the confirmed handoff for 9.5.2.
+The 9.5 result is intentionally bounded: it models and persists `system`/`light`/`dark`, wires the selected mode into `MaterialApp.router`, exposes a compact Settings Appearance selector, and validates the flow without changing theme token ownership, wallet behavior, release tooling, or the broader Settings/About polish reserved for 9.6. The next Phase 9 implementation target remains 9.6 — Settings and About UX Alignment.
 

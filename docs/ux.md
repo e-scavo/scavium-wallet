@@ -297,7 +297,7 @@ The UX direction is based on the SCAVIUM Design Token System:
 - light and dark modes should feel like the same product, not two unrelated skins;
 - Settings/About should clearly expose application version and appearance controls.
 
-The desired user outcome is a smoother visual experience: less noise, clearer hierarchy, better contrast, and more predictable appearance across web, desktop, Android, and future supported platforms. Phase 9.1 proves the first identity slice through concrete Settings/About implementation, while later subphases must prove the broader token, theme, and appearance-selection behavior.
+The desired user outcome is a smoother visual experience: less noise, clearer hierarchy, better contrast, and more predictable appearance across web, desktop, Android, and future supported platforms. Phase 9.1 proves the first identity slice through concrete Settings/About implementation, and Phase 9.5 now proves the appearance-selection behavior through a bounded Settings Appearance selector backed by persisted runtime theme mode.
 
 ---
 
@@ -309,4 +309,22 @@ Phase 9.3 closes the baseline UX contract by making the token vocabulary semanti
 
 The UX intent is not to redesign the wallet in one pass. The intent is to make the existing SCAVIUM visual language calmer, more consistent, and easier to apply across mobile, desktop, and web surfaces without scattering direct color decisions through screens. The implemented shared-widget adoption proves this through cards, buttons, section titles, snackbars, and confirmation dialogs while leaving feature flows unchanged.
 
-After 9.3, the application remains dark-only at runtime. Light/dark parity, persisted theme selection, and Settings appearance controls belong to later Phase 9 subphases.
+After 9.3, the application remained dark-only at runtime. Phase 9.4 then introduced paired light/dark themes, and Phase 9.5 now exposes persisted runtime selection through Settings while keeping broader Settings/About hierarchy polish reserved for 9.6.
+
+
+---
+
+## 🎨 Phase 9.5 Appearance Selection UX
+
+Phase 9.5 makes appearance control discoverable without turning Settings into a full redesign. The selector is intentionally compact and placed in an Appearance section before the existing security, signing, diagnostics, danger-zone, and about controls.
+
+Implemented UX behavior:
+
+- `System` communicates that SCAVIUM Wallet follows the device display mode;
+- `Light` and `Dark` provide explicit runtime choices;
+- the selected mode is visible in the segmented control;
+- changing the selection updates the app root reactively;
+- the preference survives local app restarts through local persistence;
+- existing sensitive Settings actions keep their previous copy, placement, and confirmation behavior.
+
+The UX boundary remains narrow. Phase 9.5 does not introduce account-synced preferences, remote appearance configuration, white-label controls, new onboarding decisions, or a broader Settings/About layout rewrite. That broader hierarchy and polish work remains the purpose of Phase 9.6.

@@ -484,3 +484,23 @@ The architectural rule after 9.3 is that token ownership belongs to the app them
 
 Phase 9.3 did not introduce light-mode runtime behavior; that remains a Phase 9.4/9.5 responsibility. Future theme work should extend the token namespace rather than reintroducing scattered screen-level colors, component-specific magic values, or parallel screen-local palettes.
 
+
+
+---
+
+## 🎨 Phase 9.5 Theme Mode Runtime Architecture
+
+Phase 9.5 closes the runtime appearance-selection boundary without moving theme ownership out of the app theme layer.
+
+The implemented ownership split is:
+
+- `AppTheme.lightTheme` and `AppTheme.darkTheme` remain the only concrete theme definitions selected at runtime;
+- `ThemeModePreference` owns the supported application preference values, storage strings, labels/descriptions, fallback behavior, and Flutter `ThemeMode` mapping;
+- `ThemeModeRepository` defines the persistence contract;
+- `LocalThemeModeRepository` persists the selected value through `LocalStorageService` and `StorageKeys.themeModePreference`;
+- `themeModeRepositoryProvider` exposes persistence through the existing provider boundary;
+- `ThemeModeController` owns reactive preference state and persistence updates;
+- `ScaviumWalletApp` is the only app-root consumer that applies the selected mode to `MaterialApp.router`;
+- Settings owns only the user interaction through `ThemeModeSelector`.
+
+This keeps the architecture layered: Settings does not serialize or read storage directly, the app root does not know storage details, token files do not know user preference state, and wallet/domain modules do not participate in appearance selection. Future theme-mode work should extend this boundary rather than introducing screen-local theme branches or direct storage calls from UI widgets.

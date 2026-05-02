@@ -445,3 +445,24 @@ Phase 9.0 validates the phase contract before implementation:
 - No code validation command is required for the documentation-only lock, but later implementation subphases must return to `fvm flutter analyze` and `fvm flutter test`.
 - Generated `.agent/*` files are not part of this closure unless a later task explicitly requests agent generation.
 
+
+
+### Phase 9.5 Theme Mode Selection Development Contract
+
+Phase 9.5 is closed as the runtime selection and persistence implementation. Future development must preserve the ownership split introduced by this phase:
+
+- add or change supported appearance values only through `ThemeModePreference`;
+- keep stored preference strings stable unless an explicit migration is documented;
+- persist theme-mode preference through `ThemeModeRepository` / `LocalThemeModeRepository`, not through direct UI `SharedPreferences` access;
+- apply runtime theme mode only at `MaterialApp.router` in `ScaviumWalletApp`;
+- keep Settings as the interaction surface, not the persistence or app-root owner;
+- do not use theme-mode work as a reason to alter wallet, signing, backup, diagnostics, routing, release, CI, or token ownership.
+
+Recommended focused validation after future theme-mode edits:
+
+    fvm flutter test test/theme_mode_preference_test.dart
+    fvm flutter test test/theme_mode_controller_test.dart
+    fvm flutter test test/theme_mode_selector_test.dart
+    fvm flutter test test/settings_screen_test.dart
+
+Full validation remains `fvm flutter analyze` and `fvm flutter test` before phase closure or release-oriented work.
